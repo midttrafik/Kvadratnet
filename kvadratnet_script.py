@@ -227,7 +227,7 @@ chunk_size = 500
 stop_nodes_ig_chunks = [stop_nodes_ig[i:i+chunk_size] for i in range(0, len(stop_nodes_ig), chunk_size)]
 
 # processer hver chunk
-for chunk_id, stop_nodes_ig_chunk in enumerate(stop_nodes_ig_chunks[0:2]):
+for chunk_id, stop_nodes_ig_chunk in enumerate(stop_nodes_ig_chunks):
     print('-----------------------------------------------------')
     print(f'Processing stop chunk: {chunk_id+1}/{len(stop_nodes_ig_chunks)}')
     print(f'Number of stops in chunk: {len(stop_nodes_ig_chunk)}')
@@ -248,7 +248,7 @@ for chunk_id, stop_nodes_ig_chunk in enumerate(stop_nodes_ig_chunks[0:2]):
                                                    stop_nodes_ig_noduplicates)
     
     time_end = time()
-    print(f'Processed chunk in {round(time_end - time_start, 2)} seconds')
+    print(f'Processed chunk in {round(time_end-time_start, 2)} seconds')
 
 
 # beregn total distance fra centroid -> node -> node -> stop
