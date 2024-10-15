@@ -275,13 +275,13 @@ def format_output(kvadratnet_df):
     output['closest_stopid'] = output['closest_stopid'].astype(str)
 
     # simplificer kolonnenavne så de ikke er for lange
-    output.rename(columns={'min_distance_total':'dist_total',
-                           'min_distance_node_to_node':'dist_path',
-                           'distance_centroid_to_node':'d_centroid',
-                           'distance_stop_to_node':'d_stop',
-                           'closest_stopname':'stopname',
-                           'closest_stopid':'stopid'
-                           })
+    output = output.rename(columns={'min_distance_total':'dist_total',
+                                    'min_distance_node_to_node':'dist_path',
+                                    'distance_centroid_to_node':'d_centroid',
+                                    'distance_stop_to_node':'d_stop',
+                                    'closest_stopname':'stopname',
+                                    'closest_stopid':'stopid'
+                                    })
     return output
 
 
@@ -303,17 +303,18 @@ print(f'5/5 Resultat gemt som {output_filename}.')
 
 
 #-----------------------------------------------------------------------------------------------------------------------
-def summary_statistics(kvadratnet_df):
-    print('Mindste distance:', kvadratnet_df['min_distance_total'].min())
-    print('Største distance:', kvadratnet_df['min_distance_total'].max())
-    print('Gennemsnitlig distance:', kvadratnet_df['min_distance_total'].mean())
-    print('25% kvantil:', kvadratnet_df['min_distance_total'].quantile(0.25))
-    print('50% kvantil:', kvadratnet_df['min_distance_total'].quantile(0.50))
-    print('75% kvantil:', kvadratnet_df['min_distance_total'].quantile(0.75))
-    print('90% kvantil:', kvadratnet_df['min_distance_total'].quantile(0.90))
-    print('Befolkningsvægtet gennemsnitlig distance (NA antages at være 5):', 
-          ((kvadratnet_df['antal_tal'].fillna(5)*kvadratnet_df['min_distance_total']).sum()
-           /kvadratnet_df['antal_tal'].fillna(5).sum()).round(2))
+def summary_statistics(distances, population_density):
+    print('Mindste distance:', distances.min())
+    print('Største distance:', distances.max())
+    print('Gennemsnitlig distance:', distances.mean())
+    print('25% kvantil:', distances.quantile(0.25))
+    print('50% kvantil:', distances.quantile(0.50))
+    print('75% kvantil:', distances.quantile(0.75))
+    print('90% kvantil:', distances.quantile(0.90))
+    
+    population_density_filled = population_density.fillna(5)
+    weighted_average_dist = (population_density_filled*distances).sum()/population_density_filled.sum()
+    print('Befolkningsvægtet gennemsnitlig distance (NA antages at være 5):', weighted_average_dist.round(2))
 
 print('-'*50)
 summary_statistics(output)
