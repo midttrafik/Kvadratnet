@@ -6,16 +6,43 @@ import pandas as pd
 import numpy as np
 from copy import deepcopy
 from time import time
-
-ox.settings.use_cache = True
-ox.settings.log_console = True
+import os
 
 
-data_path = 'Data/'
-result_path = 'Resultater/'
+####################
+# sæt filnavne
+####################
 stop_filename = 'MT_Stoppunkter_20241015.csv'
 kvadratnet_filename = 'befolkning_2024.shp'
 crs = 'EPSG:25832'
+data_path = 'Data/'
+result_path = 'Resultater/'
+
+"""
+   Udarbejdet af Midttrafik
+   
+   Formål: 
+    Udregne distance til nærmeste stoppested fra centroide af hvert kvadrat i kvadratnettet
+   
+   Input:
+    - Standere som csv fil
+    - Kvadratnet som shapefil
+
+   Output:
+    - Kvadratnet som shapefil med distance til nærmeste stander samt navn og nummer på stander
+"""
+
+# sæt working directory til denne fils placering
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+print('Working directory:', os.getcwd())
+
+# aktiver caching
+ox.settings.use_cache = True
+
+# deaktiver at OSM download skrives til konsolen
+ox.settings.log_console = False
 
 
 #----------------------------------------------------------------------------------------------------------
