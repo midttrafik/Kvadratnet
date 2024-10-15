@@ -92,6 +92,7 @@ def read_and_project_OSM(place, crs):
 
 
 start = time()
+print('-'*50)
 
 # læs data
 stop_gdf = read_stop_file(data_path + stop_filename)
@@ -103,7 +104,6 @@ print('Læst kvadratnet')
 G_proj = read_and_project_OSM('Region Midtjylland', crs)
 
 end = time()
-print('-'*50)
 print(f'1/5 Læst og projiceret OSM netværk på {round(end-start, 2)} sekunder.')
 
 
@@ -227,7 +227,7 @@ chunk_size = 500
 stop_nodes_ig_chunks = [stop_nodes_ig[i:i+chunk_size] for i in range(0, len(stop_nodes_ig), chunk_size)]
 
 # processer hver chunk
-for chunk_id, stop_nodes_ig_chunk in enumerate(stop_nodes_ig_chunks):
+for chunk_id, stop_nodes_ig_chunk in enumerate(stop_nodes_ig_chunks[0:2]):
     print('-----------------------------------------------------')
     print(f'Processing stop chunk: {chunk_id+1}/{len(stop_nodes_ig_chunks)}')
     print(f'Number of stops in chunk: {len(stop_nodes_ig_chunk)}')
@@ -258,7 +258,7 @@ kvadratnet['min_distance_total'] = (kvadratnet['min_distance_node_to_node']
 
 end = time()
 print('-'*50)
-print(f'4/5 Udregnet mindste distance for hver centroide på {round(end-start)} sekunder.')
+print(f'4/5 Udregnet mindste distance for hver centroide på {round(end-start, 2)} sekunder.')
 
 
 #-------------------------------------------------------------------------------------------------------------------------
@@ -290,7 +290,7 @@ def write_output(output, path, filename):
     output_filename = '_distance.'.join(filename.split('.'))
     
     # skriv shapefil
-    output.to_file(path+output_filename, 
+    output.to_file(path + output_filename, 
                    driver='ESRI Shapefile')
     
     return output_filename
@@ -298,7 +298,7 @@ def write_output(output, path, filename):
 
 print('-'*50)
 output = format_output(kvadratnet)
-output_filename = write_output(output=kvadratnet, path=result_path, filename=kvadratnet_filename)
+output_filename = write_output(output=output, path=result_path, filename=kvadratnet_filename)
 print(f'5/5 Resultat gemt som {output_filename}.')
 
 
@@ -316,4 +316,4 @@ def summary_statistics(kvadratnet_df):
            /kvadratnet_df['antal_tal'].fillna(5).sum()).round(2))
 
 print('-'*50)
-summary_statistics(kvadratnet)
+summary_statistics(output)
