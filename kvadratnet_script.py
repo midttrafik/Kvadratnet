@@ -6,26 +6,25 @@ import pandas as pd
 import numpy as np
 from time import time
 import os
+import click
 
-
-####################
-# angiv filnavne
-stop_filename = 'MT_Stoppunkter_20241015.csv'
-kvadratnet_filename = 'befolkning_2024.shp'
-
-# område og stopfiltre kan ændres
-osm_place = 'Region Midtjylland'
-stop_filter = {'Fjern Flextur':True,
-               'Fjern Plustur':True,
-               'Fjern 09 stander':True}
-
-# kan ændres, højere værdier brugere mere memory
-chunk_size = 500
+# modtag input
+stop_filename = click.prompt("Navn på stopfil uden sti til mappe", type=str)
+kvadratnet_filename = click.prompt("Navn på kvadratnetsfil uden sti til mappe", type=str)
+osm_place = click.prompt("Navn på OSM område", type=str, default='Region Midtjylland')
+flex = click.prompt("Fjern Flextur", type=bool, default=True)
+plus = click.prompt("Fjern Plustur", type=bool, default=True)
+stander_9 = click.prompt("Fjern 09 stander", type=bool, default=True)
+chunk_size = click.prompt("Chunk size", type=int, default=500)
 
 # bør ikke ændres
 crs = 'EPSG:25832'
 data_path = 'Data/'
 result_path = 'Resultater/'
+
+stop_filter = {'Fjern Flextur':flex,
+               'Fjern Plustur':plus,
+               'Fjern 09 stander':stander_9}
 
 """
    Udarbejdet af Midttrafik
