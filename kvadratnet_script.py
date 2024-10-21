@@ -94,9 +94,9 @@ def read_kvadratnet_file(path):
     kvadratnet['geometry_center'] = kvadratnet.centroid
     
     # definer kolonnerne vi ønsker at udregne
-    kvadratnet['min_distance_node_to_node'] = np.inf
-    kvadratnet['distance_centroid_to_node'] = np.inf
-    kvadratnet['distance_stop_to_node'] = np.inf
+    kvadratnet['min_distance_node_to_node'] = 100*1000 # 100km er et stort tal cirka ligmed uendelighed 
+    kvadratnet['distance_centroid_to_node'] = 100*1000
+    kvadratnet['distance_stop_to_node'] = 100*1000
     kvadratnet['closest_stopname'] = None
     kvadratnet['closest_stopid'] = None
     return kvadratnet
@@ -121,7 +121,7 @@ print('1/5 påbegynder indlæsning af data.')
 
 # læs stop data
 stop_gdf = read_stop_file(data_path + stop_filename, filters=stop_filter)
-print(f'Læst {stop_gdf.shape[0]} standere og fjernet Flextur, Plustur og 09 standere.')
+print(f'Læst {stop_gdf.shape[0]} standere og filtreret Flextur, Plustur og 09 standere.')
 
 # læs kvadratnet data
 kvadratnet = read_kvadratnet_file(data_path + kvadratnet_filename)
@@ -131,7 +131,7 @@ print(f'Læst {kvadratnet.shape[0]} kvadrater.')
 G_proj = read_and_project_OSM(osm_place, crs)
 
 end = time()
-print(f'Læst og projiceret OSM netværk ({G_proj.nodes} knuder og {G_proj.edges} stier) på {round(end-start, 2)} sekunder.')
+print(f'Læst og projiceret OSM netværk ({len(G_proj.nodes)} knuder og {len(G_proj.edges)} stier) på {round(end-start, 2)} sekunder.')
 
 
 #----------------------------------------------------------------------------------------------------------
@@ -278,7 +278,7 @@ for chunk_id, stop_nodes_ig_chunk in enumerate(stop_nodes_ig_chunks):
                                                    stop_nodes_ig_noduplicates)
     
     time_end = time()
-    print(f'Processed chunk in {round(time_end-time_start, 2)} seconds')
+    print(f'Processerede chunk på {round(time_end-time_start, 2)} sekunder.')
 
 
 # beregn total distance fra centroid -> node -> node -> stop
