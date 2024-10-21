@@ -16,11 +16,9 @@ flex = click.prompt("Fjern Flextur", type=bool, default=True)
 plus = click.prompt("Fjern Plustur", type=bool, default=True)
 stander_9 = click.prompt("Fjern 09 stander", type=bool, default=False)
 chunk_size = click.prompt("Chunk size", type=int, default=500)
-
-# bør ikke ændres
-crs = 'EPSG:25832'
-data_path = 'Data/'
-result_path = 'Resultater/'
+crs = click.prompt("CRS", type=str, default='EPSG:25832')
+data_path = click.prompt("Sti til data", type=str, default='Data/')
+result_path = click.prompt("Sti til resultater", type=str, default='Resultater/')
 
 stop_filter = {'Fjern Flextur':flex,
                'Fjern Plustur':plus,
