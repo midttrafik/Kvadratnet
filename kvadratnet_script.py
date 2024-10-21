@@ -9,16 +9,23 @@ import os
 
 
 ####################
-# sæt filnavne
-####################
+# angiv filnavne
 stop_filename = 'MT_Stoppunkter_20241015.csv'
 kvadratnet_filename = 'befolkning_2024.shp'
 
+# område og stopfiltre kan ændres
 osm_place = 'Region Midtjylland'
+stop_filter = {'Fjern Flextur':True,
+               'Fjern Plustur':True,
+               'Fjern 09 stander':True}
+
+# kan ændres, højere værdier brugere mere memory
+chunk_size = 500
+
+# bør ikke ændres
 crs = 'EPSG:25832'
 data_path = 'Data/'
 result_path = 'Resultater/'
-chunk_size = 500
 
 """
    Udarbejdet af Midttrafik
@@ -48,17 +55,31 @@ ox.settings.log_console = False
 
 
 #----------------------------------------------------------------------------------------------------------
-def read_stop_file(path):
+def read_stop_file(path, filters):
     # læs stop csv fil
     stop_df = pd.read_csv(path, 
                           delimiter=';', 
                           decimal=',', 
                           encoding='Latin-1')
     
-    stop_df = stop_df[['Kode til stoppunkt', 'Pos.nr.', 'Long name', 'UTM32_Easting', 'UTM32_Northing']]
+    cols_to_keep = ['Kode til stoppunkt', 'Pos.nr.', 'Long name', 'UTM32_Easting', 'UTM32_Northing']
+    for col in cols_to_keep:
+        assert col in stop_df.columns, f'Standertabellen skal indeholde kolonnen {col}.'
+    
+    stop_df = stop_df[cols_to_keep]
     
     # fjern ikke-fysiske standere og plustur og flextur
-    stop_df = stop_df[(stop_df['Pos.nr.'] != 9) & (stop_df['Long name'].str.contains('Knudepunkt|knudepunkt|Plustur|plustur')==False)]
+    assert len(filters.keys()) == 3, 'Stop_filters skal indeholde præcis 3 filtre.'
+    assert 'Fjern 09 stander' in filters, 'Stop_filter mangler \'Fjern 09 stander\' med boolsk værdi.'
+    assert 'Fjern Flextur' in filters, 'Stop_filter mangler \'Fjern Flextur\' med boolsk værdi.'
+    assert 'Fjern Plustur' in filters, 'Stop_filter mangler \'Fjern Plustur\' med boolsk værdi.'
+    
+    if filters['Fjern 09 stander']:
+        stop_df = stop_df[stop_df['Pos.nr.'] != 9]
+    if filters['Fjern Flextur']:
+        stop_df = stop_df[stop_df['Long name'].str.contains('Knudepunkt|knudepunkt')==False]
+    if filters['Fjern Plustur']:
+        stop_df = stop_df[stop_df['Long name'].str.contains('Plustur|plustur')==False]
     
     # transformer til geopandas
     stop_gdf = gpd.GeoDataFrame(stop_df, 
@@ -94,9 +115,6 @@ def read_and_project_OSM(place, crs):
                             )
     # projicer til crs
     G_proj = ox.project_graph(G, to_crs=crs)
-    
-    print('OSM edges:', len(G_proj.edges))
-    print('OSM nodes:', len(G_proj.nodes))
     return G_proj
 
 
@@ -105,12 +123,12 @@ print('-'*50)
 print('1/5 påbegynder indlæsning af data.')
 
 # læs stop data
-stop_gdf = read_stop_file(data_path + stop_filename)
-print(f'Læst {stop_gdf.shape[0]} standere')
+stop_gdf = read_stop_file(data_path + stop_filename, filters=stop_filter)
+print(f'Læst {stop_gdf.shape[0]} standere og fjernet Flextur, Plustur og 09 standere.')
 
 # læs kvadratnet data
 kvadratnet = read_kvadratnet_file(data_path + kvadratnet_filename)
-print(f'Læst {kvadratnet.shape[0]} kvadrater')
+print(f'Læst {kvadratnet.shape[0]} kvadrater.')
 
 # hent osm data
 G_proj = read_and_project_OSM(osm_place, crs)
