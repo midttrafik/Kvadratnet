@@ -52,7 +52,11 @@ def read_stop_file(path):
                           delimiter=';', 
                           decimal=',', 
                           encoding='Latin-1')
-    stop_df = stop_df[['Kode til stoppunkt', 'Long name', 'UTM32_Easting', 'UTM32_Northing']]
+    
+    stop_df = stop_df[['Kode til stoppunkt', 'Pos.nr.', 'Long name', 'UTM32_Easting', 'UTM32_Northing']]
+    
+    # fjern ikke-fysiske standere og plustur og flextur
+    stop_df = stop_df[(stop_df['Pos.nr.'] != 9) & (stop_df['Long name'].str.contains('Knudepunkt|knudepunkt|Plustur|plustur')==False)]
     
     # transformer til geopandas
     stop_gdf = gpd.GeoDataFrame(stop_df, 
@@ -81,10 +85,13 @@ def read_kvadratnet_file(path):
 def read_and_project_OSM(place, crs):
     # hent OSM lag
     G = ox.graph_from_place(place, 
-                            network_type='walk', 
-                            custom_filter=None)
+                            network_type='all', # alle vej- og stityper
+                            custom_filter=None,
+                            simplify=True, # simplificer nodes og edges
+                            retain_all=True # behold nodes som ikke kan nåes fra regionen, det forhindrer at stier på Venø og Samsø droppes
+                            )
     # projicer til crs
-    G_proj = ox.project_graph(G, to_crs='EPSG:25832')
+    G_proj = ox.project_graph(G, to_crs=crs)
     
     print('OSM edges:', len(G_proj.edges))
     print('OSM nodes:', len(G_proj.nodes))
