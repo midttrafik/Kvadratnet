@@ -4,7 +4,6 @@ import igraph as ig
 import geopandas as gpd
 import pandas as pd
 import numpy as np
-from copy import deepcopy
 from time import time
 import os
 
@@ -14,9 +13,12 @@ import os
 ####################
 stop_filename = 'MT_Stoppunkter_20241015.csv'
 kvadratnet_filename = 'befolkning_2024.shp'
+
+osm_place = 'Region Midtjylland'
 crs = 'EPSG:25832'
 data_path = 'Data/'
 result_path = 'Resultater/'
+chunk_size = 500
 
 """
    Udarbejdet af Midttrafik
@@ -73,7 +75,7 @@ def read_kvadratnet_file(path):
     # udregn centroider
     kvadratnet['geometry_center'] = kvadratnet.centroid
     
-    # definer kolonnerne vi øsnker at udregne
+    # definer kolonnerne vi ønsker at udregne
     kvadratnet['min_distance_node_to_node'] = np.inf
     kvadratnet['distance_centroid_to_node'] = np.inf
     kvadratnet['distance_stop_to_node'] = np.inf
@@ -100,18 +102,21 @@ def read_and_project_OSM(place, crs):
 
 start = time()
 print('-'*50)
+print('1/5 påbegynder indlæsning af data.')
 
-# læs data
+# læs stop data
 stop_gdf = read_stop_file(data_path + stop_filename)
-print('Læst stop')
+print(f'Læst {stop_gdf.shape[0]} standere')
 
+# læs kvadratnet data
 kvadratnet = read_kvadratnet_file(data_path + kvadratnet_filename)
-print('Læst kvadratnet')
+print(f'Læst {kvadratnet.shape[0]} kvadrater')
 
-G_proj = read_and_project_OSM('Region Midtjylland', crs)
+# hent osm data
+G_proj = read_and_project_OSM(osm_place, crs)
 
 end = time()
-print(f'1/5 Læst og projiceret OSM netværk på {round(end-start, 2)} sekunder.')
+print(f'Læst og projiceret OSM netværk ({G_proj.nodes} knuder og {G_proj.edges} stier) på {round(end-start, 2)} sekunder.')
 
 
 #----------------------------------------------------------------------------------------------------------
@@ -137,13 +142,14 @@ def graph_networkx_to_igraph(G_nx):
 
 
 start = time()
+print('-'*50)
+print('2/5 Påbegynder konvertering af OSM til igraph.')
 
 # konverter projiceret OSM graf til iGraph graf
 G_ig, map_id_to_osmid, map_osmid_to_id = graph_networkx_to_igraph(G_proj)
 
 end = time()
-print('-'*50)
-print(f'2/5 Konverteret OSM netværk til igraph på {round(end-start, 2)} sekunder.')
+print(f'Konverteret OSM netværk til igraph på {round(end-start, 2)} sekunder.')
 
 
 #----------------------------------------------------------------------------------------------------------
@@ -160,6 +166,8 @@ def transform_osm_node_to_ig_node(points):
 
 
 start = time()
+print('-'*50)
+print('3/5 Påbegynder transformering af centroider og stop til igraph id\'er.')
 
 # transformer centroider til nodes
 centroids = kvadratnet['geometry_center']
@@ -185,8 +193,7 @@ stop_gdf['iGraph_id'] = stop_nodes_ig
 stop_gdf['distance_stop_to_node'] = distance_stop_node
 
 end = time()
-print('-'*50)
-print(f'3/5 Transformeret centroider og stop til igraph id\'er på {round(end-start, 2)} sekunder.')
+print(f'Transformeret centroider og stop til igraph id\'er på {round(end-start, 2)} sekunder.')
 
 
 #----------------------------------------------------------------------------------------------------------
@@ -228,16 +235,17 @@ def add_smallest_distance_to_centroid(kvadratnet_df,
 
 
 start = time()
+print('-'*50)
+print('4/5 Påbegynder udregning af korteste distancer.')
 
 # opdel stop nodes ig i chunks
-chunk_size = 500
 stop_nodes_ig_chunks = [stop_nodes_ig[i:i+chunk_size] for i in range(0, len(stop_nodes_ig), chunk_size)]
 
 # processer hver chunk
 for chunk_id, stop_nodes_ig_chunk in enumerate(stop_nodes_ig_chunks):
-    print('-----------------------------------------------------')
-    print(f'Processing stop chunk: {chunk_id+1}/{len(stop_nodes_ig_chunks)}')
-    print(f'Number of stops in chunk: {len(stop_nodes_ig_chunk)}')
+    print('*'*50)
+    print(f'Processerer stop chunk: {chunk_id+1}/{len(stop_nodes_ig_chunks)}')
+    print(f'Antal stop i chunk: {len(stop_nodes_ig_chunk)}')
     
     time_start = time()
     
@@ -264,8 +272,7 @@ kvadratnet['min_distance_total'] = (kvadratnet['min_distance_node_to_node']
                                     + kvadratnet['distance_stop_to_node'])
 
 end = time()
-print('-'*50)
-print(f'4/5 Udregnet mindste distance for hver centroide på {round(end-start, 2)} sekunder.')
+print(f'Udregnet korteste distancer på {round(end-start, 2)} sekunder.')
 
 
 #-------------------------------------------------------------------------------------------------------------------------
@@ -304,9 +311,12 @@ def write_output(output, path, filename):
 
 
 print('-'*50)
+print('5/5 Påbegynder klargøring af resultat.')
+
 output = format_output(kvadratnet)
 output_filename = write_output(output=output, path=result_path, filename=kvadratnet_filename)
-print(f'5/5 Resultat gemt som {output_filename}.')
+
+print(f'Resultat gemt som {output_filename}.')
 
 
 #-----------------------------------------------------------------------------------------------------------------------
@@ -324,4 +334,4 @@ def summary_statistics(distances, population_density):
     print('Befolkningsvægtet gennemsnitlig distance (NA antages at være 5):', weighted_average_dist.round(2))
 
 print('-'*50)
-summary_statistics(output)
+summary_statistics(distances=output['dist_total'], population_density=output['antal_tal'])
