@@ -7,10 +7,10 @@ Området er som udgangspunkt Region Midtjylland men ethvert andet område kan v�
 # Data
 
 * Shapefil for befolkningskvadratnet.
-- Skal mindst indeholde kolonnerne geometry og antal_tal
-- F:\Køreplanlægning\Data og Analyse\Grunddata\Befolkning\...\xxx.shp
+    - Skal mindst indeholde kolonnerne geometry og antal_tal
+    - F:\Køreplanlægning\Data og Analyse\Grunddata\Befolkning\...\xxx.shp
 * CSV for standere med UTM32N koordinater.
-- Skal mindst indeholde kolonnerne: UTM32_Easting, UTM32_Northing, Long name, Kode til stoppunkt og Pos.nr.
+    - Skal mindst indeholde kolonnerne: UTM32_Easting, UTM32_Northing, Long name, Kode til stoppunkt og Pos.nr.
 * Dobbeltrettet OSM netværk af typen ”all” hentes automatisk. Inkluderer alle typer veje og stier indenfor det definerede område
 
 
@@ -21,12 +21,12 @@ Området er som udgangspunkt Region Midtjylland men ethvert andet område kan v�
 * Placer stoppestedsfil (.csv) i mappen Data
 * Åben script i VSCode og kør
 * Indtast inputs. Default værdi er angivet som [...].
-- Filnavn på stoppested og kvadratnet er påkrævet
-- OSM område er default Region Midtjylland men kan ændres til andre områder f.eks. Aarhus
-- Chunk size kan sænkes fra 500 hvis memory er et problem
+    - Filnavn på stoppested og kvadratnet er påkrævet
+    - OSM område er default Region Midtjylland men kan ændres til andre områder f.eks. Aarhus
+    - Chunk size kan sænkes fra 500 hvis memory er et problem
 * Kør script (ca. 30-35 minutter)
-- Cirka 5 minutter for indlæsning af data
-- Cirka 1-2 minutter per chunk
+    - Cirka 5 minutter for indlæsning af data
+    - Cirka 1-2 minutter per chunk
 * Upload resultat til Webgis
 
 Resultatet indeholder:
