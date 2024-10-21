@@ -14,7 +14,7 @@ kvadratnet_filename = click.prompt("Navn på kvadratnetsfil uden sti til mappe",
 osm_place = click.prompt("Navn på OSM område", type=str, default='Region Midtjylland')
 flex = click.prompt("Fjern Flextur", type=bool, default=True)
 plus = click.prompt("Fjern Plustur", type=bool, default=True)
-stander_9 = click.prompt("Fjern 09 stander", type=bool, default=True)
+stander_9 = click.prompt("Fjern 09 stander", type=bool, default=False)
 chunk_size = click.prompt("Chunk size", type=int, default=500)
 
 # bør ikke ændres
