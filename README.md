@@ -40,7 +40,8 @@ Resultatet indeholder:
 
 
 [!IMPORTANT]
-**Alle beregningerne indeholder en usikkerhed** da centroider og standere tildeles OSM knuder.\\
+Alle beregningerne indeholder en usikkerhed da centroider og standere tildeles OSM knuder.
+
 Vej- og stinettet fra OpenStreetMap er en graf som består af et sæt knuder og kanter.\\
 Selvom Region Midtjylland har over 1 million knuder, findes der ikke én knude som er præcist placeret ved centroiden af et kvadrat.\\
 I enkelte tilfælde betyder det at et kvadrat har en højere distance sammenlignet med nabokvadraterne.\\
