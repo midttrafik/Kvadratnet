@@ -332,21 +332,3 @@ output = format_output(kvadratnet)
 output_filename = write_output(output=output, path=result_path, filename=kvadratnet_filename)
 
 print(f'Resultat gemt som {output_filename}.')
-
-
-#-----------------------------------------------------------------------------------------------------------------------
-def summary_statistics(distances, population_density):
-    print('Mindste distance:', distances.min())
-    print('Største distance:', distances.max())
-    print('Gennemsnitlig distance:', distances.mean())
-    print('25% kvantil:', distances.quantile(0.25))
-    print('50% kvantil:', distances.quantile(0.50))
-    print('75% kvantil:', distances.quantile(0.75))
-    print('90% kvantil:', distances.quantile(0.90))
-    
-    population_density_filled = population_density.fillna(5)
-    weighted_average_dist = (population_density_filled*distances).sum()/population_density_filled.sum()
-    print('Befolkningsvægtet gennemsnitlig distance (NA antages at være 5):', weighted_average_dist.round(2))
-
-print('-'*50)
-summary_statistics(distances=output['dist_total'], population_density=output['antal_tal'])
