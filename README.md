@@ -10,7 +10,7 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
 # Data
 
 * Geometrisk inputfil som shapefil
-    - Skal indeholde en geometrikolonne med navnet geom
+    - Skal indeholde en geometrikolonne med navnet geometry
     - Kan f.eks. være Befolkningskvadratnet, Arbejdspladser, Udannelsesinstitutioner mv.
     - F:\Køreplanlægning\Data og Analyse\Grunddata\Befolkning\...\xxx.shp
 * Standerfil som CSV med UTM32N koordinater.

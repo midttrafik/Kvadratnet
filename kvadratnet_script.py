@@ -6,7 +6,10 @@ import pandas as pd
 import numpy as np
 from time import time
 import os
+import sys
 import click
+
+#sys.exit()
 
 # modtag input
 stop_filename = click.prompt("Navn på stopfil uden sti til mappe", type=str)
@@ -15,6 +18,7 @@ osm_place = click.prompt("Navn på administrativt OSM område", type=str, defaul
 flex = click.prompt("Fjern Flextur", type=bool, default=True)
 plus = click.prompt("Fjern Plustur", type=bool, default=True)
 stander_9 = click.prompt("Fjern 09 stander", type=bool, default=False)
+stander_nedlagt = click.prompt("Fjern nedlagte standere", type=bool, default=True)
 chunk_size = click.prompt("Chunk size", type=int, default=500)
 crs = click.prompt("CRS", type=str, default='EPSG:25832')
 data_path = click.prompt("Sti til data", type=str, default='Data/')
@@ -22,7 +26,8 @@ result_path = click.prompt("Sti til resultater", type=str, default='Resultater/'
 
 stop_filter = {'Fjern Flextur':flex,
                'Fjern Plustur':plus,
-               'Fjern 09 stander':stander_9}
+               'Fjern 09 stander':stander_9,
+               'Fjern nedlagte standere':stander_nedlagt}
 
 """
    Udarbejdet af Midttrafik
@@ -52,24 +57,30 @@ ox.settings.log_console = False
 
 
 #----------------------------------------------------------------------------------------------------------
-def read_stop_file(path, filters):
+def read_stop_file(path, filename):
     # læs stop csv fil
-    stop_df = pd.read_csv(path, 
+    stop_df = pd.read_csv(path + filename, 
                           delimiter=';', 
                           decimal=',', 
                           encoding='Latin-1')
     
+    # verificer at påkrævede kolonner eksisterer
     cols_to_keep = ['Kode til stoppunkt', 'Pos.nr.', 'Long name', 'UTM32_Easting', 'UTM32_Northing']
     for col in cols_to_keep:
         assert col in stop_df.columns, f'Standertabellen skal indeholde kolonnen {col}.'
     
+    # behold kun påkrævede kolonner
     stop_df = stop_df[cols_to_keep]
-    
-    # fjern ikke-fysiske standere og plustur og flextur
-    assert len(filters.keys()) == 3, 'Stop_filters skal indeholde præcis 3 filtre.'
+    return stop_df
+
+
+def filter_transform_stops(stop_df, filters):
+    # fjern filtrer standere baseret på filtre
+    assert len(filters.keys()) == 4, 'Stop_filters skal indeholde præcis 4 filtre.'
     assert 'Fjern 09 stander' in filters, 'Stop_filter mangler \'Fjern 09 stander\' med boolsk værdi.'
     assert 'Fjern Flextur' in filters, 'Stop_filter mangler \'Fjern Flextur\' med boolsk værdi.'
     assert 'Fjern Plustur' in filters, 'Stop_filter mangler \'Fjern Plustur\' med boolsk værdi.'
+    assert 'Fjern nedlagte standere' in filters, 'Stop_filter mangler \'Fjern nedlagte standere\' med boolsk værdi'
     
     if filters['Fjern 09 stander']:
         stop_df = stop_df[stop_df['Pos.nr.'] != 9]
@@ -77,6 +88,8 @@ def read_stop_file(path, filters):
         stop_df = stop_df[stop_df['Long name'].str.contains('Knudepunkt|knudepunkt')==False]
     if filters['Fjern Plustur']:
         stop_df = stop_df[stop_df['Long name'].str.contains('Plustur|plustur')==False]
+    if filters['Fjern nedlagte standere']:
+        stop_df = stop_df[stop_df['Long name'].str.contains('NEDLAGT|nedlagt|Nedlagt')==False]
     
     # transformer til geopandas
     stop_gdf = gpd.GeoDataFrame(stop_df, 
@@ -94,9 +107,10 @@ def read_kvadratnet_file(path):
     kvadratnet['geometry_center'] = kvadratnet.centroid
     
     # definer kolonnerne vi ønsker at udregne
-    kvadratnet['min_distance_node_to_node'] = 100*1000 # 100km er et stort tal cirka ligmed uendelighed 
-    kvadratnet['distance_centroid_to_node'] = 100*1000
-    kvadratnet['distance_stop_to_node'] = 100*1000
+    stort_tal = 100*1000 # 100km er et stort tal cirka ligmed uendelighed 
+    kvadratnet['min_distance_node_to_node'] = stort_tal
+    kvadratnet['distance_centroid_to_node'] = stort_tal
+    kvadratnet['distance_stop_to_node'] = stort_tal
     kvadratnet['closest_stopname'] = None
     kvadratnet['closest_stopid'] = None
     return kvadratnet
@@ -120,8 +134,9 @@ print('-'*50)
 print('1/5 påbegynder indlæsning af data.')
 
 # læs stop data
-stop_gdf = read_stop_file(data_path + stop_filename, filters=stop_filter)
-print(f'Læst {stop_gdf.shape[0]} standere og filtreret Flextur, Plustur og 09 standere.')
+stop_df = read_stop_file(path=data_path, filename=stop_filename)
+stop_gdf = filter_transform_stops(stop_df=stop_df, filters=stop_filter)
+print(f'Læst {stop_gdf.shape[0]} standere og filtreret Flextur, Plustur, 09 standere og nedlagte standere.')
 
 # læs kvadratnet data
 kvadratnet = read_kvadratnet_file(data_path + kvadratnet_filename)
