@@ -1,6 +1,6 @@
 # Formål
 
-Beregn distancen fra hvert geometrisk punkt (f.eks. befolkningskvadratnet, arbejdspladser, uddannelsesinstitutioner) til nærmeste stoppested.<br/>
+Beregn distancen på OSM vej- og stinettet fra geometriske objekter (f.eks. befolkningskvadratnet, arbejdspladser, uddannelsesinstitutioner) til nærmeste stoppested.<br/>
 Området er som udgangspunkt Region Midtjylland, men ethvert administrativt område fra OpenStreetMap kan anvendes.<br/>
 
 <br/>
@@ -12,7 +12,6 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
 * Geometrisk inputfil som shapefil
     - Skal indeholde en geometrikolonne med navnet geometry
     - Kan f.eks. være Befolkningskvadratnet, Arbejdspladser, Udannelsesinstitutioner mv.
-    - F:\Køreplanlægning\Data og Analyse\Grunddata\Befolkning\...\xxx.shp
 * Standerfil som CSV med UTM32N koordinater.
     - Skal indeholde kolonnerne: UTM32_Easting, UTM32_Northing, Long name, Kode til stoppunkt og Pos.nr.
 * Dobbeltrettet OSM netværk af typen ”all” hentes automatisk. Inkluderer alle typer veje og stier indenfor det administrative område.
@@ -23,21 +22,37 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
 
 # Procedure
 
+## Opsætning af Data
 * Placer geometrisk inputfil (.shp) i mappen Data
 * Placer stoppestedsfil (.csv) i mappen Data
-* Åben script i VSCode og kør
+* Åben *data_handler.py* i VSCode
+* Er geometrikolonnen i input understøttet af *select_method* dvs. af typen Polygon eller Point?
+    - Hvis ja, spring ned til Kørsel af Algoritme
+    - Ellers skrives en funktion som 1. læser dataen og 2. transformerer kolonnen *geometry* til *geometry_center* med datatypen *Point* og 3. tilføj else if case til *select_method*
+
+<br/>
+
+## Kørsel af Algoritme
+* Åben *algoritme_script.py* i VSCode og kør. Intet skal ændres i denne fil.
 * Indtast inputs. Default værdi er angivet som [...].
-    - Filnavnet for standerfilen og geometrisk inputfil er påkrævet
-    - OSM område er default Region Midtjylland men kan ændres til andre administrative områder f.eks. Aarhus
+    - Konfigurationsmetoden til geometrien for stop er obligatorisk. Kun *MobilePlan* er understøttet
+    - Konfigurationsmetoden til geometrien for input er obligatorisk. Nuværende er kun *Kvadratnet* eller *Punkter* understøttet
+    - Filnavnet for standerfilen er påkrævet f.eks. *MT_Stoppunkter_20241015.csv*
+    - Filnavnet for inputfil er påkrævet f.eks. *befolkning_2024.shp*
+    - OSM område er som udgangspunkt Region Midtjylland men kan ændres til andre administrative områder f.eks. Aarhus
+    - Flextur, Plustur og nedlagte standere fjernes som udgangspunkt
+    - 09 Standere beholdes som udgangspunkt
     - Stander chunk size kan sænkes fra 500 hvis memory er et problem
 * Kør script (ca. 30-35 minutter)
     - Cirka 5 minutter for indlæsning af data
     - Cirka 1-2 minutter for Dijkstras algoritme per stander chunk
 * Outputtet ligger i mappen Resultater
 * Upload resultat til Webgis
-* Evt. slet cache
+* Evt. slet cache og pycache
 
-Resultatet indeholder:
+<br/>
+
+## Resultatet
 * Alle kolonner og geometrien fra input filen
 * Navn og nummer på nærmeste stander til hver geometriske punkt
 * (dist\_total) Den totale distance mellem centroiden af kvadratet og gps punkt for nærmeste stander (summen af de tre næste distancer)
@@ -103,4 +118,4 @@ Denne tilgang kan nemt paralleliseres i igraph og udnytter effekterne ved multip
 
 # Backlog
 
-* Bedre input data abstraktion. Gør kompatible med vilkårligt punkt eller polygon data i input og hjælpefil.
+* Kun distancen til stoppesteder er understøttet på nuværende tidspunkt

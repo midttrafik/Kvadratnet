@@ -10,9 +10,6 @@ import sys
 import click
 from data_handler import *
 
-import warnings
-warnings.simplefilter(action='ignore', category=FutureWarning)
-
 #sys.exit()
 
 # modtag input
@@ -28,8 +25,8 @@ stander_9 = click.prompt("Fjern 09 stander", type=bool, default=False)
 stander_nedlagt = click.prompt("Fjern nedlagte standere", type=bool, default=True)
 chunk_size = click.prompt("Chunk size", type=int, default=500)
 crs = click.prompt("CRS", type=str, default='EPSG:25832')
-data_path = click.prompt("Sti til data", type=str, default='Data/')
-result_path = click.prompt("Sti til resultater", type=str, default='Resultater/')
+data_path = click.prompt("Sti til data", type=str, default='Data\\')
+result_path = click.prompt("Sti til resultater", type=str, default='Resultater\\')
 
 stop_filter = {'Fjern Flextur':flex,
                'Fjern Plustur':plus,
@@ -157,8 +154,8 @@ print(f'Konverteret OSM netværk til igraph på {round(end-start, 2)} sekunder.'
 def transform_osm_node_to_ig_node(points):
     # find nærmeste osm node id til punkt
     osm_nodes, distances_point_to_node = ox.nearest_nodes(G_proj, 
-                                                          X=[point.x for point in points], 
-                                                          Y=[point.y for point in points], 
+                                                          X=points.x.to_list(), 
+                                                          Y=points.y.to_list(), 
                                                           return_dist=True)
     
     # map osm nodes til igraph id

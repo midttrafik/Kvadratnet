@@ -1,5 +1,6 @@
 import pandas as pd
 import geopandas as gpd
+from shapely import Point
 
 #----------------------------------------------------------------------------------------------------------
 # Tilføj if case for hver type af data
@@ -11,8 +12,10 @@ def select_method(input_read_method_name, stop_read_method_name):
     stop_transform_method = None
     
     # tilføj cases for input
-    if input_read_method_name in ['Befolkningskvadratnet']:
-        input_read_method = befolkningskvadratnet
+    if input_read_method_name in ['Kvadratnet']:
+        input_read_method = kvadratnet
+    elif input_read_method_name in ['Punkter']:
+        input_read_method = punkter
     else:
         raise ValueError(f'Fejl i navn på input metode {input_read_method_name}')
     
@@ -32,17 +35,30 @@ def select_method(input_read_method_name, stop_read_method_name):
 
 
 #----------------------------------------------------------------------------------------------------------
-# Tilføj metoder for hver type input data
+# Tilføj metoder for hver type input data.
+# Argumenter skal være (path, filename, crs)
+# Output skal indeholde geometry_center af typen Point
 #----------------------------------------------------------------------------------------------------------
 # Befolkningskvadratnet
-def befolkningskvadratnet(path, filename, crs):
+def kvadratnet(path, filename, crs):
     kvadratnet = gpd.read_file(path + filename, 
                                crs=crs)
     
     # udregn centroider
     kvadratnet['geometry_center'] = kvadratnet.centroid
-    
+        
     return kvadratnet
+
+
+# CVR Midtjylland
+def punkter(path, filename, crs):
+    punkter = gpd.read_file(path + filename,
+                            crs=crs)
+    
+    # lav kopi af geometry kolonne
+    punkter['geometry_center'] = punkter['geometry'].copy()
+        
+    return punkter
 
 
 #----------------------------------------------------------------------------------------------------------
@@ -118,7 +134,10 @@ class DataHandler():
     def load_and_process_stops(self, path, filename, stop_filters):
         stop_df = self._stop_read_method(path, filename)
         stop_df = self._stop_filter_method(stop_df, stop_filters)
-        self._stop_gdf = self._stop_transform_method(stop_df, self._crs)
+        stop_df = self._stop_transform_method(stop_df, self._crs)
+        
+        # reset index og gem
+        self._stop_gdf = stop_df.reset_index(drop=True)
         
     
     def get_stops(self):
@@ -126,10 +145,23 @@ class DataHandler():
     
     
     def load_and_process_input(self, path, filename):
-        self._input_gdf = self._input_read_method(path, filename, self._crs)
+        input_gdf = self._input_read_method(path, filename, self._crs)
         
-        # tjek at geometrien er gemt som geometry_center
+        # find og drop NA værdier i geometrien
+        NA_indexes = input_gdf['geometry_center'].isna()
+        if NA_indexes.any():
+            NA_antal = NA_indexes.sum()
+            NA_list = input_gdf.index[NA_indexes==True].to_list()
+            print(f'Fjernet {NA_antal} rækker i input hvor geometrien er NA! De vil ikke være tilstede i resultatet.')
+            print(f'Rækkerne som er fjernet er: {NA_list}')
+        input_gdf = input_gdf[NA_indexes==False]
+        
+        # reset index og gem
+        self._input_gdf = input_gdf.reset_index(drop=True)
+        
+        # tjek at geometrien er gemt som geometry_center med typen Point
         assert 'geometry_center' in self._input_gdf.columns, f'{self._input_read_method} skal indeholde kolonnen geometry_center med punkt-geometrien.'
+        assert isinstance(self._input_gdf.loc[0, 'geometry_center'], Point), 'Hvert punkt i geometry_center skal være af typen Point.'
 
 
     def get_input(self):
