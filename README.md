@@ -78,7 +78,7 @@ I enkelte tilfælde betyder det at et kvadrat har en højere distance sammenlign
 # Dokumentation af løsning
 
 Python [OSMNX](https://osmnx.readthedocs.io/en/stable/) og [NetworkX](https://networkx.org/) til at håndtere OSM grafen.<br/>
-Python [igraph](https://github.com/igraph/python-igraph) (Python interface til C bibliotek) anvendes til højeffektive udregninger af grafteori bl.a. ved parallelisering på flere CPU-kerner.<br/>
+Python [igraph](https://github.com/igraph/python-igraph) (Python interface til C bibliotek) anvendes til højeffektive udregninger af grafteori bl.a. ved parallelisering på flere CPU-kerner. Beregninger i C er meget hurtigere end beregniner i Python, derfor anvendes igraph fremfor OSMNX. <br/>
 Koblingen mellem Python og igraph er lavet med inspiration i Notebook 14 fra [OSMNX Notebooks](https://github.com/gboeing/osmnx-examples)<br/>
 
 Kerne-algoritmen udregner korteste distance fra et punkt i inputfilen til nærmeste punkt i hjælpefilen.<br/>
@@ -109,7 +109,7 @@ Definer følgende:
 Bemærk at $S$ og $T$ begge er delmænder knuderne på grafen, altså $S \subset V$ og $T \subset V$. <br/>
 
 
-### Algoritme 1: (optimal)
+### Algoritme 1: optimal
 Find korteste vej fra hvert startpunkt til hvert slutpunkt $S_i \rightarrow T_j$ for alle $i=1, ..., |S|$ og $j=1, ..., |T|$.
 Denne løsning er sikret at give en optimalløsning, dog er det en naiv brute-force tilgang. <br/>
 
@@ -117,7 +117,7 @@ Antal gentagelser af korteste vej algoritmen: $|S| |T|$ <br/>
 Forventet tidskompleksitet med Dijkstras Algoritme: $O_1 = O(|S| |T| (|V| + |E|) \ln{(|V|)})$ <br/>
 
 
-### Algoritme 2: (heuristik)
+### Algoritme 2: heuristik
 Find korteste vej fra hvert startpunkt $S_i$ til sættet af slutpunkter $K_i$ som er tættest på $S_i$ i fugleflugtsdistance, hvor sættet af slutpunkter altid har størrelsen $|K|$. $S_i \rightarrow T_j$ for $i=1, ..., |S|$ og $j \in K_i$. <br/>
 Præprocesseringen af fugleflugtdistancer koster $O(|S| |T|)$. <br/>
 Løsningen er en heuristik tilgang som ikke er garanteret at give en optimalløsning, f.eks. hvis et startpunkt er meget langt væk fra de nærmeste slutpunkter, kan det forventes at distancen i fugleflugt meget anderledes en distancen på vejnettet. <br/>
@@ -126,15 +126,15 @@ Antal gentagelser af korteste vej algoritmen: $|S| |K|$ <br/>
 Forventet tidskompleksitet med Dijkstras Algoritme: $O_2 = O(|S| |K| (|V| + |E|) \ln{(|V|)} + |S| |T|)$ <br/>
 
 
-### Algoritme 3: (optimal)
+### Algoritme 3: optimal
 Find korteste vej fra hvert startpunkt $S_i$ til alle knuder i grafen $S_i \rightarrow V_l$ for $i=1, ..., |S|$ og $l=1, ..., |V|$. Problemet er hermed løst da $T \subset V$ så for hvert startpunkt findes det slutpunkt med korteste ditance hvilket koster $O(|S| |T|)$ <br/>
 
 Antal gentagelser af korteste vej algoritmen: $|S|$ <br/>
 Forventet tidskomplexitet med Dijkstras Algortime: $O_3 = O(|S| (|V| + |E|) \ln{(|V|)} + |S| |T|)$ <br/>
 
 
-### Algoritme 4: (optimal)
-Hvis $|S| > |T|$ kan vi omskrive [Algoritme 3](#Algoritme-3:-(optimal)) til at løse korteste vej fra hvert slutpunkt $T_j$ til alle knuder i grafen $T_j \rightarrow V_l$ for $l=1, ..., |V|$ og $j=1, ..., |T|$. Efterprocesseringen koster stadig $O(|S| |T|)$. <br/>
+### Algoritme 4: optimal
+Hvis $|S| > |T|$ kan vi omskrive [Algoritme 3](#algoritme-3-optimal) til at løse korteste vej fra hvert slutpunkt $T_j$ til alle knuder i grafen $T_j \rightarrow V_l$ for $l=1, ..., |V|$ og $j=1, ..., |T|$. Efterprocesseringen koster stadig $O(|S| |T|)$. <br/>
 
 Antal gentagelser af korteste vej algoritmen: $|T|$ <br/>
 Forventet tidskomplexitet med Dijkstras Algortime: $O_4 = O(|T| (|V| + |E|) \ln{(|V|)} + |S| |T|)$ <br/>
@@ -144,16 +144,15 @@ Forventet tidskomplexitet med Dijkstras Algortime: $O_4 = O(|T| (|V| + |E|) \ln{
 OSM i Midtjylland har $|V| \approx 1200000$ knuder og $|E| \approx 400000$ stier. <br/>
 Befolkningskvadratnettet i Midtjylland har $|S| \approx 110000$ kvadrater, Midttrafik har $|T| \approx 10000$ stoppesteder og lad sæt antal naboer til $|K|=20$. <br/>
 
-[Algoritme 2](#Algoritme-2:-(heurestik)) er $\frac{O_1}{O_2} = 500$ gange hurtigere end [Algoritme 1](#Algoritme-1:-(optimal)). <br/>
-[Algoritme 3](#Algoritme-3:-(optimal)) er $\frac{O_2}{O_3} = 20$ gange hurtigere end [Algoritme 2](#Algoritme-2:-(heurestik)). <br/>
-[Algoritme 4](#Algoritme-4:-(optimal)) er $\frac{O_3}{O_4} = 11$ gange hurtigere end [Algoritme 3](#Algoritme-3:-(optimal)). <br/>
-Det svarer til at Algoritme 4 er 110000 gange hurtigere end brute-force metoden, [Algoritme 1](#Algoritme-1:-(optimal)). <br/>
+[Algoritme 2](#algoritme-2-heuristik) er $\frac{O_1}{O_2} = 500$ gange hurtigere end [Algoritme 1](#algoritme-1-optimal). <br/>
+[Algoritme 3](#algoritme-3-optimal) er $\frac{O_2}{O_3} = 20$ gange hurtigere end [Algoritme 2](#algoritme-2-heuristik). <br/>
+[Algoritme 4](#algoritme-4-optimal) er $\frac{O_3}{O_4} = 11$ gange hurtigere end [Algoritme 3](#algoritme-3-optimal). <br/>
+Det svarer til at Algoritme 4 er 110000 gange hurtigere end brute-force metoden, [Algoritme 1](#algoritme-1-optimal). <br/>
 
-Den nuværende løsning i Python anvender pakken igraph, der er skrevet i C, som er meget hurtigere end pakken OSMNX, der er skrevet i Python. Igraph paralleliserer også udregningerne og udnytter derved fordelene ved multiprocessing. <br/>
-[Algoritme 4](#Algoritme-4:-(optimal)) tager på nuværende tidspunkt 20 minutter med igraph. <br/>
-[Algoritme 3](#Algoritme-3:-(optimal)) forventes at tage 3.5 timer. <br/>
-[Algoritme 2](#Algoritme-2:-(heurestik)) forventes at tage 3 dage. <br/>
-[Algoritme 1](#Algoritme-1:-(optimal)) forventes at tage 4 år! <br/>
+[Algoritme 4](#algoritme-4-optimal) tager på nuværende tidspunkt 20 minutter med igraph. <br/>
+[Algoritme 3](#algoritme-3-optimal) forventes at tage 3.5 timer. <br/>
+[Algoritme 2](#algoritme-2-heuristik) forventes at tage 3 dage. <br/>
+[Algoritme 1](#algoritme-1-optimal) forventes at tage 4 år! <br/>
 
 <br/>
 <br/>
