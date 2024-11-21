@@ -147,7 +147,7 @@ Befolkningskvadratnettet i Midtjylland har $|S| \approx 110000$ kvadrater, Midtt
 [Algoritme 2](#algoritme-2-heuristik) er $\frac{O_1}{O_2} = 500$ gange hurtigere end [Algoritme 1](#algoritme-1-optimal). <br/>
 [Algoritme 3](#algoritme-3-optimal) er $\frac{O_2}{O_3} = 20$ gange hurtigere end [Algoritme 2](#algoritme-2-heuristik). <br/>
 [Algoritme 4](#algoritme-4-optimal) er $\frac{O_3}{O_4} = 11$ gange hurtigere end [Algoritme 3](#algoritme-3-optimal). <br/>
-Det svarer til at Algoritme 4 er 110000 gange hurtigere end brute-force metoden, [Algoritme 1](#algoritme-1-optimal). <br/>
+Det svarer til at [Algoritme 4](#algoritme-4-optimal) er 110000 gange hurtigere end brute-force metoden, [Algoritme 1](#algoritme-1-optimal). <br/>
 
 [Algoritme 4](#algoritme-4-optimal) tager på nuværende tidspunkt 20 minutter med igraph. <br/>
 [Algoritme 3](#algoritme-3-optimal) forventes at tage 3.5 timer. <br/>
