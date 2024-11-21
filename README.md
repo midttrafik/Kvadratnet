@@ -134,7 +134,7 @@ Forventet tidskomplexitet med Dijkstras Algortime: $O_3 = O(|S| (|V| + |E|) \ln{
 
 
 ### Algoritme 4: (optimal)
-Hvis $|S| > |T|$ kan vi omskrive [Algoritme 3](###-Algoritme-3:-(optimal)) til at løse korteste vej fra hvert slutpunkt $T_j$ til alle knuder i grafen $T_j \rightarrow V_l$ for $l=1, ..., |V|$ og $j=1, ..., |T|$. Efterprocesseringen koster stadig $O(|S| |T|)$. <br/>
+Hvis $|S| > |T|$ kan vi omskrive [Algoritme 3](#Algoritme-3:-(optimal)) til at løse korteste vej fra hvert slutpunkt $T_j$ til alle knuder i grafen $T_j \rightarrow V_l$ for $l=1, ..., |V|$ og $j=1, ..., |T|$. Efterprocesseringen koster stadig $O(|S| |T|)$. <br/>
 
 Antal gentagelser af korteste vej algoritmen: $|T|$ <br/>
 Forventet tidskomplexitet med Dijkstras Algortime: $O_4 = O(|T| (|V| + |E|) \ln{(|V|)} + |S| |T|)$ <br/>
@@ -144,16 +144,16 @@ Forventet tidskomplexitet med Dijkstras Algortime: $O_4 = O(|T| (|V| + |E|) \ln{
 OSM i Midtjylland har $|V| \approx 1200000$ knuder og $|E| \approx 400000$ stier. <br/>
 Befolkningskvadratnettet i Midtjylland har $|S| \approx 110000$ kvadrater, Midttrafik har $|T| \approx 10000$ stoppesteder og lad sæt antal naboer til $|K|=20$. <br/>
 
-[Algoritme 2](###-Algoritme-2:-(heurestik)) er $\frac{O_1}{O_2} = 500$ gange hurtigere end [Algoritme 1](###-Algoritme-1:-(optimal)). <br/>
-[Algoritme 3](###-Algoritme-3:-(optimal)) er $\frac{O_2}{O_3} = 20$ gange hurtigere end [Algoritme 2](###-Algoritme-2:-(heurestik)). <br/>
-[Algoritme 4](###-Algoritme-4:-(optimal)) er $\frac{O_3}{O_4} = 11$ gange hurtigere end [Algoritme 3](###-Algoritme-3:-(optimal)). <br/>
-Det svarer til at Algoritme 4 er 110000 gange hurtigere end brute-force metoden, [Algoritme 1](###-Algoritme-1:-(optimal)). <br/>
+[Algoritme 2](#Algoritme-2:-(heurestik)) er $\frac{O_1}{O_2} = 500$ gange hurtigere end [Algoritme 1](#Algoritme-1:-(optimal)). <br/>
+[Algoritme 3](#Algoritme-3:-(optimal)) er $\frac{O_2}{O_3} = 20$ gange hurtigere end [Algoritme 2](#Algoritme-2:-(heurestik)). <br/>
+[Algoritme 4](#Algoritme-4:-(optimal)) er $\frac{O_3}{O_4} = 11$ gange hurtigere end [Algoritme 3](#Algoritme-3:-(optimal)). <br/>
+Det svarer til at Algoritme 4 er 110000 gange hurtigere end brute-force metoden, [Algoritme 1](#Algoritme-1:-(optimal)). <br/>
 
 Den nuværende løsning i Python anvender pakken igraph, der er skrevet i C, som er meget hurtigere end pakken OSMNX, der er skrevet i Python. Igraph paralleliserer også udregningerne og udnytter derved fordelene ved multiprocessing. <br/>
-[Algoritme 4](###-Algoritme-4:-(optimal)) tager på nuværende tidspunkt 20 minutter med igraph. <br/>
-[Algoritme 3](###-Algoritme-3:-(optimal)) forventes at tage 3.5 timer. <br/>
-[Algoritme 2](###-Algoritme-2:-(heurestik)) forventes at tage 3 dage. <br/>
-[Algoritme 1](###-Algoritme-1:-(optimal)) forventes at tage 4 år! <br/>
+[Algoritme 4](#Algoritme-4:-(optimal)) tager på nuværende tidspunkt 20 minutter med igraph. <br/>
+[Algoritme 3](#Algoritme-3:-(optimal)) forventes at tage 3.5 timer. <br/>
+[Algoritme 2](#Algoritme-2:-(heurestik)) forventes at tage 3 dage. <br/>
+[Algoritme 1](#Algoritme-1:-(optimal)) forventes at tage 4 år! <br/>
 
 <br/>
 <br/>
