@@ -24,7 +24,7 @@ plus = click.prompt("Fjern Plustur", type=bool, default=True)
 stander_9 = click.prompt("Fjern 09 stander", type=bool, default=False)
 stander_nedlagt = click.prompt("Fjern nedlagte standere", type=bool, default=True)
 chunk_size = click.prompt("Chunk size", type=int, default=500)
-minimum_components = click.prompt("Minimum forbundende komponenter", type=int, default=100)
+minimum_components = click.prompt("Minimum forbundende komponenter", type=int, default=200)
 crs = click.prompt("CRS", type=str, default='EPSG:25832')
 data_path = click.prompt("Sti til data", type=str, default='Data\\')
 result_path = click.prompt("Sti til resultater", type=str, default='Resultater\\')
@@ -105,6 +105,7 @@ def remove_small_components_OSM(G, minimum_components):
     
     return G_filtered
 
+
 def get_OSM_polygon(place, crs):
     # hent polygonet fra stednavnet
     place_boundary = ox.geocode_to_gdf(place)
@@ -128,7 +129,7 @@ print('1/5 påbegynder indlæsning af data.')
 G_proj = read_and_project_OSM(osm_place, crs)
 G_proj = remove_small_components_OSM(G_proj, minimum_components)
 polygon = get_OSM_polygon(osm_place, crs)
-
+print(f'Læst og projiceret OSM netværk ({len(G_proj.nodes)} knuder og {len(G_proj.edges)} stier).')
 
 # læs input data
 dataHandler.load_and_process_input(path=data_path,
@@ -146,9 +147,11 @@ stop_gdf = dataHandler.get_stops()
 stop_gdf = remove_stops_outside_OSM(stop_gdf, polygon)
 print(f'Læst {stop_gdf.shape[0]} standere og filtreret Flextur, Plustur, 09 standere og nedlagte standere.')
 
+# gør plads i memory
+del polygon
 
 end = time()
-print(f'Læst og projiceret OSM netværk ({len(G_proj.nodes)} knuder og {len(G_proj.edges)} stier) på {round(end-start, 2)} sekunder.')
+print(f'Læst data på {round(end-start, 2)} sekunder.')
 
 
 #----------------------------------------------------------------------------------------------------------
