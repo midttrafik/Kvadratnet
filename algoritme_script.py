@@ -24,6 +24,7 @@ plus = click.prompt("Fjern Plustur", type=bool, default=True)
 stander_9 = click.prompt("Fjern 09 stander", type=bool, default=False)
 stander_nedlagt = click.prompt("Fjern nedlagte standere", type=bool, default=True)
 chunk_size = click.prompt("Chunk size", type=int, default=500)
+minimum_components = click.prompt("Minimum forbundende komponenter", type=int, default=100)
 crs = click.prompt("CRS", type=str, default='EPSG:25832')
 data_path = click.prompt("Sti til data", type=str, default='Data\\')
 result_path = click.prompt("Sti til resultater", type=str, default='Resultater\\')
@@ -79,14 +80,30 @@ def prepare_input(input_gdf):
 def read_and_project_OSM(place, crs):
     # hent OSM lag
     G = ox.graph_from_place(place, 
-                            network_type='all', # alle vej- og stityper
+                            network_type='all', # alle vej- og stityper # ændret
                             custom_filter=None,
                             simplify=True, # simplificer nodes og edges
-                            retain_all=True # behold nodes som ikke kan nåes fra regionen, det forhindrer at stier på Venø og Samsø droppes
+                            retain_all=True # behold nodes som ikke kan nåes fra regions centrum, det forhindrer at stier på Venø og Samsø droppes
                             )
+    
     # projicer til crs
-    G_proj = ox.project_graph(G, to_crs=crs)
+    G_proj = ox.project_graph(G, to_crs=crs)   
+      
     return G_proj
+
+
+def remove_small_components_OSM(G, minimum_components):
+    # find alle komponenter som ikke er indbyrdes forbundende
+    connected_components = list(nx.connected_components(G.to_undirected()))
+
+    # fjern komponenter hvis komponenten indeholder for få knuder og kanter
+    large_components = [c for c in connected_components if len(c) >= minimum_components]
+
+    # genopbyg grafen ved brug af filtreret komponenter
+    nodes_to_keep = set().union(*large_components)
+    G_filtered = G.subgraph(nodes_to_keep).copy() 
+    
+    return G_filtered
 
 
 start = time()
@@ -112,6 +129,8 @@ print(f'Læst {kvadratnet.shape[0]} kvadrater.')
 
 # hent osm data
 G_proj = read_and_project_OSM(osm_place, crs)
+G_proj = remove_small_components_OSM(G_proj, minimum_components)
+
 
 end = time()
 print(f'Læst og projiceret OSM netværk ({len(G_proj.nodes)} knuder og {len(G_proj.edges)} stier) på {round(end-start, 2)} sekunder.')
@@ -143,8 +162,10 @@ start = time()
 print('-'*50)
 print('2/5 Påbegynder konvertering af OSM til igraph.')
 
+
 # konverter projiceret OSM graf til iGraph graf
 G_ig, map_id_to_osmid, map_osmid_to_id = graph_networkx_to_igraph(G_proj)
+
 
 end = time()
 print(f'Konverteret OSM netværk til igraph på {round(end-start, 2)} sekunder.')
@@ -167,6 +188,7 @@ start = time()
 print('-'*50)
 print('3/5 Påbegynder transformering af centroider og stop til igraph id\'er.')
 
+
 # transformer centroider til nodes
 centroids = kvadratnet['geometry_center']
 centroid_nodes_osm, centroid_nodes_ig, distance_centroid_node = transform_osm_node_to_ig_node(centroids)
@@ -174,12 +196,14 @@ kvadratnet['OSM_id'] = centroid_nodes_osm
 kvadratnet['iGraph_id'] = centroid_nodes_ig
 kvadratnet['distance_centroid_to_node'] = distance_centroid_node
 
+
 # transformer stop til nodes
 stoppoints = stop_gdf['geometry']
 stop_nodes_osm, stop_nodes_ig, distance_stop_node = transform_osm_node_to_ig_node(stoppoints)
 stop_gdf['OSM_id'] = stop_nodes_osm
 stop_gdf['iGraph_id'] = stop_nodes_ig
 stop_gdf['distance_stop_to_node'] = distance_stop_node
+
 
 # gentag således stop udenfor Midtjylland fjernes
 # Det samme som at stop hvor distancen fra stop til node er > 1000 meter
@@ -189,6 +213,7 @@ stop_nodes_osm, stop_nodes_ig, distance_stop_node = transform_osm_node_to_ig_nod
 stop_gdf['OSM_id'] = stop_nodes_osm
 stop_gdf['iGraph_id'] = stop_nodes_ig
 stop_gdf['distance_stop_to_node'] = distance_stop_node
+
 
 end = time()
 print(f'Transformeret centroider og stop til igraph id\'er på {round(end-start, 2)} sekunder.')
@@ -236,8 +261,10 @@ start = time()
 print('-'*50)
 print('4/5 Påbegynder udregning af korteste distancer.')
 
+
 # opdel stop nodes ig i chunks
 stop_nodes_ig_chunks = [stop_nodes_ig[i:i+chunk_size] for i in range(0, len(stop_nodes_ig), chunk_size)]
+
 
 # processer hver chunk
 for chunk_id, stop_nodes_ig_chunk in enumerate(stop_nodes_ig_chunks):
@@ -269,6 +296,7 @@ kvadratnet['min_distance_total'] = (kvadratnet['min_distance_node_to_node']
                                     + kvadratnet['distance_centroid_to_node'] 
                                     + kvadratnet['distance_stop_to_node'])
 
+
 end = time()
 print(f'Udregnet korteste distancer på {round(end-start, 2)} sekunder.')
 
@@ -276,7 +304,7 @@ print(f'Udregnet korteste distancer på {round(end-start, 2)} sekunder.')
 #-------------------------------------------------------------------------------------------------------------------------
 def format_output(kvadratnet_df):
     # drop ligegyldige kolonner
-    output = kvadratnet_df.drop(columns=['geometry_center', 'OSM_id', 'iGraph_id'])
+    output = kvadratnet_df.drop(columns=['geometry_center', 'iGraph_id'])
 
     # formater datatyper og afrunding
     output['min_distance_total'] = output['min_distance_total'].round(2)
@@ -311,7 +339,9 @@ def write_output(output, path, filename):
 print('-'*50)
 print('5/5 Påbegynder klargøring af resultat.')
 
+
 output = format_output(kvadratnet)
 output_filename = write_output(output=output, path=result_path, filename=kvadratnet_filename)
+
 
 print(f'Resultat gemt som {output_filename}.')
