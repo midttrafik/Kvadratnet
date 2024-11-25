@@ -105,18 +105,29 @@ def remove_small_components_OSM(G, minimum_components):
     
     return G_filtered
 
+def get_OSM_polygon(place, crs):
+    # hent polygonet fra stednavnet
+    place_boundary = ox.geocode_to_gdf(place)
+    place_boundary = place_boundary.to_crs(crs)
+    polygon = place_boundary.geometry.iloc[0]
+    
+    return polygon
+
+
+def remove_stops_outside_OSM(stops, polygon):
+    stops_filtered = stops[stops['geometry'].intersects(polygon)]
+    return stops_filtered
+
 
 start = time()
 print('-'*50)
 print('1/5 påbegynder indlæsning af data.')
 
 
-# læs stop data
-dataHandler.load_and_process_stops(path=data_path,
-                                   filename=stop_filename,
-                                   stop_filters=stop_filter)
-stop_gdf = dataHandler.get_stops()
-print(f'Læst {stop_gdf.shape[0]} standere og filtreret Flextur, Plustur, 09 standere og nedlagte standere.')
+# hent osm data
+G_proj = read_and_project_OSM(osm_place, crs)
+G_proj = remove_small_components_OSM(G_proj, minimum_components)
+polygon = get_OSM_polygon(osm_place, crs)
 
 
 # læs input data
@@ -127,9 +138,13 @@ kvadratnet = prepare_input(kvadratnet)
 print(f'Læst {kvadratnet.shape[0]} kvadrater.')
 
 
-# hent osm data
-G_proj = read_and_project_OSM(osm_place, crs)
-G_proj = remove_small_components_OSM(G_proj, minimum_components)
+# læs stop data
+dataHandler.load_and_process_stops(path=data_path,
+                                   filename=stop_filename,
+                                   stop_filters=stop_filter)
+stop_gdf = dataHandler.get_stops()
+stop_gdf = remove_stops_outside_OSM(stop_gdf, polygon)
+print(f'Læst {stop_gdf.shape[0]} standere og filtreret Flextur, Plustur, 09 standere og nedlagte standere.')
 
 
 end = time()
@@ -198,16 +213,6 @@ kvadratnet['distance_centroid_to_node'] = distance_centroid_node
 
 
 # transformer stop til nodes
-stoppoints = stop_gdf['geometry']
-stop_nodes_osm, stop_nodes_ig, distance_stop_node = transform_osm_node_to_ig_node(stoppoints)
-stop_gdf['OSM_id'] = stop_nodes_osm
-stop_gdf['iGraph_id'] = stop_nodes_ig
-stop_gdf['distance_stop_to_node'] = distance_stop_node
-
-
-# gentag således stop udenfor Midtjylland fjernes
-# Det samme som at stop hvor distancen fra stop til node er > 1000 meter
-stop_gdf = stop_gdf[stop_gdf['distance_stop_to_node'] <= 1000]
 stoppoints = stop_gdf['geometry']
 stop_nodes_osm, stop_nodes_ig, distance_stop_node = transform_osm_node_to_ig_node(stoppoints)
 stop_gdf['OSM_id'] = stop_nodes_osm
