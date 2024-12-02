@@ -33,32 +33,38 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
 <br/>
 
 ## Kørsel af Algoritme
-* Åben *algoritme_script.py* i VSCode og kør. Intet skal ændres i denne fil.
+* Åben *algoritme_script.py* i VSCode og kør. Intet skal ændres i denne fil!
 * Indtast inputs. Default værdi er angivet som [...].
-    - Konfigurationsmetoden til geometrien for stop er obligatorisk. Kun *MobilePlan* er understøttet
     - Konfigurationsmetoden til geometrien for input er obligatorisk. Nuværende er kun *Kvadratnet* eller *Punkter* understøttet
+    - Konfigurationsmetoden til geometrien for stop er obligatorisk. Kun *MobilePlan* er understøttet
     - Filnavnet for standerfilen er påkrævet f.eks. *MT_Stoppunkter_20241015.csv*
     - Filnavnet for inputfil er påkrævet f.eks. *befolkning_2024.shp*
-    - OSM område er som udgangspunkt Region Midtjylland men kan ændres til andre administrative områder f.eks. Aarhus
+    - OSM område er som udgangspunkt Region Midtjylland men kan ændres til andre administrative områder f.eks. Aarhus Kommune
     - Flextur, Plustur og nedlagte standere fjernes som udgangspunkt
     - 09 Standere beholdes som udgangspunkt
     - Stander chunk size kan sænkes fra 500 hvis memory er et problem
-* Kør script (ca. 30-35 minutter)
-    - Cirka 5 minutter for indlæsning af data
-    - Cirka 1-2 minutter for Dijkstras algoritme per stander chunk
-* Outputtet ligger i mappen Resultater
-* Upload resultat til Webgis
+    - Minimum Forbundende Komponenter default 200, alle uforbundende grafer med færre knuder fjernes automatisk. Bør kunne forøges til 1000 hvis mange inputs ikke kan tildeles et nærmeste stop, men forøges den for meget vil f.eks. Venø blive frasorteret.
+* Kør script (Kvadratnet tager cirka 90 minutter)
+    - Cirka 10 minutter for indlæsning af data
+    - Cirka 25 minutter for Dijkstra's Algoritme
+    - Cirka 15 miutter for at hente geometrien for korteste vej for hvert input
+    - Cirka 40 minutter for at skrive shapefiler
+* Outputs ligger i mappen Resultater
+* Upload resultater til Webgis
 * Evt. slet cache og pycache
 
 <br/>
 
-## Resultatet
-* Alle kolonner og geometrien fra input filen
-* Navn og nummer på nærmeste stander til hver geometriske punkt
-* (dist\_total) Den totale distance mellem centroiden af kvadratet og gps punkt for nærmeste stander (summen af de tre næste distancer)
-* (d\_centroid) Distance fra geometrisk punkt til nærmeste OSM knude
-* (d\_stop) Distance fra standerens gps punkt til nærmeste OSM knude
-* (dist\_path) Distance mellem det geometriske punkts OSM knude og standerens OSM knude
+## Resultat
+1. Første output indeholder:
+    * Alle kolonner og geometrien fra input filen
+    * Navn og nummer på nærmeste stander til hver geometriske punkt
+    * (dist\_total) Den totale distance mellem centroiden af kvadratet og gps punkt for nærmeste stander (summen af de tre næste distancer)
+    * (dist\_input) Distance fra input til nærmeste OSM knude
+    * (dist\_stop) Distance fra standerens gps punkt til nærmeste OSM knude
+    * (dist\_path) Distance mellem inputtets OSM knude og standerens OSM knude
+2. Andet output indeholder:
+    * Det samme, dog er geometrien en Linestring som viser vejen fra objektet til nærmeste stoppested.
 
 ![screenshot](Ressourcer/Resultat_eksempel.png)
 
@@ -84,17 +90,24 @@ Koblingen mellem Python og igraph er lavet med inspiration i Notebook 14 fra [OS
 Kerne-algoritmen udregner korteste distance fra et punkt i inputfilen til nærmeste punkt i hjælpefilen.<br/>
 
 Programmets overordnet struktur:
-* Indlæs geometrisk inputfil
-* Indlæs standere og anvend filtre
-* Hent OSM netværk med OSMNX
-* Omdan OSM netværket til en igraph graf hvor kanter er vægtet med kantlængde i meter
-* Gem en mapping af igraph id til osmid og en mapping af osmid til igraph id
-* Find nærmeste OSM knude til alle geometriske punkter og gem distancen
-* Find nærmeste OSM knude til alle stop og gem distancen
-* Fjern stop hvis distancen mellem stop og nærmeste OSM knude er > 1000 meter. Det betyder at stoppet er udenfor det angivne område.
-* Oversæt OSM knuder til igraph nodes
-* Find korteste distance fra hver stop knude til alle knuder på grafen
-* For hver geometrisk punkts knude, find det stop med kortest distance
+1. Præprocessering
+    * Indlæs geometrisk inputfil
+    * Indlæs standere og anvend filtre
+    * Fjern standere som befinder sig udenfor det administrative område
+    * Hent OSM netværk med OSMNX
+    * Fjern uforbundende komponenter fra OSM
+    * Omdan OSM netværket til en igraph graf hvor kanter er vægtet med kantlængde i meter
+    * Gem en mapping af igraph id til osmid og en mapping af osmid til igraph id
+    * Find nærmeste OSM knude til alle geometriske punkter og gem distancen
+    * Find nærmeste OSM knude til alle stop og gem distancen
+    * Oversæt OSM knuder til igraph nodes
+2. Processering
+    * Find korteste distance fra hver stop knude til alle knuder på grafen
+    * For hver geometrisk punkts knude, find det stop med kortest distance
+3. Postprocessering
+    * Find stien på vejnettet mellem input og nærmeste stop og gem som Linestring
+    * Gem fil med det oprindelig input og angivelse af nærmeste stop
+    * Gem fil med stien på vejnettet
 
 <br/>
 <br/>
@@ -161,3 +174,5 @@ Det svarer til at [Algoritme 4](#algoritme-4-optimal) er 110000 gange hurtigere 
 # Backlog
 
 * Kun distancen til stoppesteder er understøttet på nuværende tidspunkt
+* For nogle få objekter kan der ikke findes en vej til et stoppested. Skyldes muligvis at det nærmeste OSM id befinder sig i en uforbundet graf med flere end Minimum Forbundende Komponenter (default 200) antal knuder.
+* Skrivning af shapefil fra geopandas er langsom for store datamængder
