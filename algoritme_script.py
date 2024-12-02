@@ -19,6 +19,7 @@ stop_read_method_name = click.prompt("Navn på stop konfigurationensmetode", typ
 stop_filename = click.prompt("Navn på stopfil uden sti til mappe", type=str)
 kvadratnet_filename = click.prompt("Navn på kvadratnetsfil uden sti til mappe", type=str)
 osm_place = click.prompt("Navn på administrativt OSM område", type=str, default='Region Midtjylland')
+write_routes = click.prompt("Vis ruter på vejnettet", type=bool, default=True)
 flex = click.prompt("Fjern Flextur", type=bool, default=True)
 plus = click.prompt("Fjern Plustur", type=bool, default=True)
 stander_9 = click.prompt("Fjern 09 stander", type=bool, default=False)
@@ -328,7 +329,7 @@ print(f'Udregnet korteste distancer på {round(end-start, 2)} sekunder.')
 #-------------------------------------------------------------------------------------------------------------------------
 from shapely.geometry import LineString
 
-def get_route(source, destination, G_ig, G_proj):
+def get_route_geometry(source, destination, G_ig, G_proj):
     # udregn korteste vej
     route_ig = G_ig.get_shortest_paths(source, to=destination, weights='length', output='vpath')
     
@@ -353,20 +354,28 @@ def get_route(source, destination, G_ig, G_proj):
     
     return route_line
 
+
+def get_routes(kvadratnet, G_ig, G_proj):
+    kvadratnet['line_geometry'] = None
+    for i in range(0, kvadratnet.shape[0]):
+        source = kvadratnet.loc[i, 'iGraph_id']
+        destination = kvadratnet.loc[i, 'stop_iGraph_id']
+        kvadratnet.loc[i, 'line_geometry'] = get_route_geometry(source, destination, G_ig, G_proj)
+        if i % 1000 == 0:
+            print(f'Hentet {i}/{kvadratnet.shape[0]} geometrier.')
+            
+    return kvadratnet
+
+
 start = time()
 print('-'*50)
 print('5/6 Henter geometrier for korteste veje.')
 
-kvadratnet['line_geometry'] = None
-for i in range(0, kvadratnet.shape[0]):
-    source = kvadratnet.loc[i, 'iGraph_id']
-    destination = kvadratnet.loc[i, 'stop_iGraph_id']
-    kvadratnet.loc[i, 'line_geometry'] = get_route(source, destination, G_ig, G_proj)
-    if i % 1000 == 0:
-        print(f'Hentet {i}/{kvadratnet.shape[0]} geometrier.')
+if write_routes:
+    kvadratnet = get_routes(kvadratnet, G_ig, G_proj)
 
 end = time()
-print(f'Heneter geometrier for korteste veje på {round(end-start, 2)} sekunder.')
+print(f'Henetet geometrier for korteste veje på {round(end-start, 2)} sekunder.')
 
 
 #-------------------------------------------------------------------------------------------------------------------------
@@ -392,14 +401,7 @@ def format_output(kvadratnet_df):
                                     'closest_stopid':'stop_id',
                                     })
     
-    # definer rute output
-    output_line = output.set_geometry('line_geometry')
-    output_line = output_line.drop(columns=['geometry'])
-    
-    # fjern rute fra kvadrat output
-    output = output.drop(columns=['line_geometry'])
-    
-    return output, output_line
+    return output
 
 
 def write_output(output, path, filename, suffix):
@@ -418,9 +420,22 @@ print('-'*50)
 print('6/6 Påbegynder klargøring af resultat.')
 start = time()
 
-output, output_line = format_output(kvadratnet)
+# formater output
+output = format_output(kvadratnet)
+
+# klargør line data
+if write_routes:
+    output_line = output.set_geometry('line_geometry')
+    output_line = output_line.drop(columns=['geometry'])
+    
+    output = output.drop(columns=['line_geometry'])
+
+# skriv fil med objekter
 output_filename = write_output(output=output, path=result_path, filename=kvadratnet_filename, suffix='distance')
-output_line_filename = write_output(output=output_line, path=result_path, filename=kvadratnet_filename, suffix='line')
+
+# skriv fil med lines
+if write_routes:
+    output_line_filename = write_output(output=output_line, path=result_path, filename=kvadratnet_filename, suffix='line')
 
 end = time()
-print(f'Resultat gemt som {output_filename} og {output_line_filename} på {round(end-start, 2)} sekunder.')
+print(f'Resultat gemt som {output_filename} på {round(end-start, 2)} sekunder.')

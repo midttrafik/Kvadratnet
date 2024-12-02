@@ -40,6 +40,7 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
     - Filnavnet for standerfilen er påkrævet f.eks. *MT_Stoppunkter_20241015.csv*
     - Filnavnet for inputfil er påkrævet f.eks. *befolkning_2024.shp*
     - OSM område er som udgangspunkt Region Midtjylland men kan ændres til andre administrative områder f.eks. Aarhus Kommune
+    - Som udgangspunkt gemmes en fil med korteste vej på vejnettet som Linestring
     - Flextur, Plustur og nedlagte standere fjernes som udgangspunkt
     - 09 Standere beholdes som udgangspunkt
     - Stander chunk size kan sænkes fra 500 hvis memory er et problem
