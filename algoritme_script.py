@@ -146,7 +146,7 @@ print(f'Læst og projiceret OSM netværk ({len(G_proj.nodes)} knuder og {len(G_p
 # fjern stop udenfor polygon
 polygon = get_OSM_polygon(osm_place, crs)
 stop_gdf = remove_stops_outside_OSM(stop_gdf, polygon)
-print(f'Fjernet stop udenfor {osm_place}')
+print(f'Fjernet stop udenfor {osm_place}, antallet af stop er nu {stop_gdf.shape[0]}')
 
 # gør plads i memory
 del polygon
@@ -229,9 +229,9 @@ print(f'Transformeret centroider og stop til igraph id\'er på {round(end-start,
 
 
 #----------------------------------------------------------------------------------------------------------
-def multi_source_all_targets_shortest_paths(sources):
-    shortest_paths = G_ig.distances(source=sources, target=None, weights="length")
-    return shortest_paths
+def multi_source_all_targets_distances(sources):
+    distances = G_ig.distances(source=sources, target=None, weights="length")
+    return distances
 
 
 def argmin(lst):
@@ -241,16 +241,16 @@ def argmin(lst):
 
 def add_smallest_distance_to_centroid(kvadratnet_df, 
                                       stop_gdf, 
-                                      shortest_paths, 
+                                      distances, 
                                       centroid_nodes_ig, 
                                       stop_nodes_ig):
     
-    number_of_stops = len(shortest_paths)
+    number_of_stops = len(distances)
     
     # iterer igennem igraph listen af centroider
     for idx, centroid_node_ig in enumerate(centroid_nodes_ig):
         # find det stop index som minimerer distancen mellem stop og centroide
-        min_distance_stop_idx, min_distance = argmin([shortest_paths[stop_idx][centroid_node_ig] for stop_idx in range(0, number_of_stops)])
+        min_distance_stop_idx, min_distance = argmin([distances[stop_idx][centroid_node_ig] for stop_idx in range(0, number_of_stops)])
         min_distance_formatted = round(min_distance, ndigits=2)
         
         if min_distance < kvadratnet_df.loc[idx, 'min_distance_node_to_node']:
@@ -262,49 +262,55 @@ def add_smallest_distance_to_centroid(kvadratnet_df,
             kvadratnet_df.loc[idx, 'distance_stop_to_node'] = stop_gdf_ig_match['distance_stop_to_node'].head(1).values
             kvadratnet_df.loc[idx, 'closest_stopname'] = stop_gdf_ig_match['Long name'].head(1).values
             kvadratnet_df.loc[idx, 'closest_stopid'] = stop_gdf_ig_match['Kode til stoppunkt'].head(1).values
+            kvadratnet_df.loc[idx, 'stop_osmid'] = stop_gdf_ig_match['OSM_id'].head(1).values
             
     return kvadratnet_df
+
+def find_shortest_distance(kvadratnet, 
+                           stop_gdf, 
+                           stop_nodes_ig, 
+                           centroid_nodes_ig, 
+                           chunk_size):
+    # opdel stop nodes ig i chunks
+    stop_nodes_ig_chunks = [stop_nodes_ig[i:i+chunk_size] for i in range(0, len(stop_nodes_ig), chunk_size)]
+
+    # processer hver chunk
+    for chunk_id, stop_nodes_ig_chunk in enumerate(stop_nodes_ig_chunks):
+        print('*'*50)
+        print(f'Processerer stop chunk: {chunk_id+1}/{len(stop_nodes_ig_chunks)}')
+        print(f'Antal stop i chunk: {len(stop_nodes_ig_chunk)}')
+    
+        time_start = time()
+    
+        # fjern duplikerede stop nodes
+        stop_nodes_ig_noduplicates = list(set(stop_nodes_ig_chunk))
+
+        # beregn distance af koreste vej som multi source all targets problem
+        distances = multi_source_all_targets_distances(stop_nodes_ig_noduplicates)
+
+        # opdater kvadratnet med korteste distance
+        kvadratnet = add_smallest_distance_to_centroid(kvadratnet, 
+                                                       stop_gdf, 
+                                                       distances, 
+                                                       centroid_nodes_ig,
+                                                       stop_nodes_ig_noduplicates)
+    
+        time_end = time()
+        print(f'Processerede chunk på {round(time_end-time_start, 2)} sekunder.')
+
+    # beregn total distance fra centroid -> node -> node -> stop
+    kvadratnet['min_distance_total'] = (kvadratnet['min_distance_node_to_node'] 
+                                        + kvadratnet['distance_centroid_to_node'] 
+                                        + kvadratnet['distance_stop_to_node'])
+    
+    return kvadratnet
 
 
 start = time()
 print('-'*50)
 print('4/5 Påbegynder udregning af korteste distancer.')
 
-
-# opdel stop nodes ig i chunks
-stop_nodes_ig_chunks = [stop_nodes_ig[i:i+chunk_size] for i in range(0, len(stop_nodes_ig), chunk_size)]
-
-
-# processer hver chunk
-for chunk_id, stop_nodes_ig_chunk in enumerate(stop_nodes_ig_chunks):
-    print('*'*50)
-    print(f'Processerer stop chunk: {chunk_id+1}/{len(stop_nodes_ig_chunks)}')
-    print(f'Antal stop i chunk: {len(stop_nodes_ig_chunk)}')
-    
-    time_start = time()
-    
-    # fjern duplikerede stop nodes
-    stop_nodes_ig_noduplicates = list(set(stop_nodes_ig_chunk))
-    
-    # beregn distance af koreste vej som multi source all targets problem
-    shortest_paths = multi_source_all_targets_shortest_paths(stop_nodes_ig_noduplicates)
-    
-    # opdater kvadratnet med korteste distance
-    kvadratnet = add_smallest_distance_to_centroid(kvadratnet, 
-                                                   stop_gdf, 
-                                                   shortest_paths, 
-                                                   centroid_nodes_ig,
-                                                   stop_nodes_ig_noduplicates)
-    
-    time_end = time()
-    print(f'Processerede chunk på {round(time_end-time_start, 2)} sekunder.')
-
-
-# beregn total distance fra centroid -> node -> node -> stop
-kvadratnet['min_distance_total'] = (kvadratnet['min_distance_node_to_node'] 
-                                    + kvadratnet['distance_centroid_to_node'] 
-                                    + kvadratnet['distance_stop_to_node'])
-
+kvadratnet = find_shortest_distance(kvadratnet, stop_gdf, stop_nodes_ig, centroid_nodes_ig, chunk_size)
 
 end = time()
 print(f'Udregnet korteste distancer på {round(end-start, 2)} sekunder.')
@@ -322,14 +328,16 @@ def format_output(kvadratnet_df):
     output['distance_stop_to_node'] = output['distance_stop_to_node'].round(2)
     output['closest_stopname'] = output['closest_stopname'].astype(str)
     output['closest_stopid'] = output['closest_stopid'].astype(str)
+    output['stop_osmid'] = output['stop_osmid'].astype(str)
 
     # simplificer kolonnenavne så de ikke er for lange
     output = output.rename(columns={'min_distance_total':'dist_total',
                                     'min_distance_node_to_node':'dist_path',
-                                    'distance_centroid_to_node':'d_centroid',
-                                    'distance_stop_to_node':'d_stop',
-                                    'closest_stopname':'stopname',
-                                    'closest_stopid':'stopid'
+                                    'distance_centroid_to_node':'dist_input',
+                                    'distance_stop_to_node':'dist_stop',
+                                    'closest_stopname':'stop_name',
+                                    'closest_stopid':'stop_id',
+                                    'stop_osmid':'stop_osmid'
                                     })
     return output
 
