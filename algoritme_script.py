@@ -124,28 +124,29 @@ start = time()
 print('-'*50)
 print('1/5 påbegynder indlæsning af data.')
 
-
-# hent osm data
-G_proj = read_and_project_OSM(osm_place, crs)
-G_proj = remove_small_components_OSM(G_proj, minimum_components)
-polygon = get_OSM_polygon(osm_place, crs)
-print(f'Læst og projiceret OSM netværk ({len(G_proj.nodes)} knuder og {len(G_proj.edges)} stier).')
-
 # læs input data
 dataHandler.load_and_process_input(path=data_path,
                                    filename=kvadratnet_filename)
 kvadratnet = dataHandler.get_input()
 kvadratnet = prepare_input(kvadratnet)
-print(f'Læst {kvadratnet.shape[0]} kvadrater.')
-
+print(f'Læst {kvadratnet.shape[0]} geometrier.')
 
 # læs stop data
 dataHandler.load_and_process_stops(path=data_path,
                                    filename=stop_filename,
                                    stop_filters=stop_filter)
 stop_gdf = dataHandler.get_stops()
+print(f'Læst {stop_gdf.shape[0]} filtreret stop.')
+
+# hent osm data
+G_proj = read_and_project_OSM(osm_place, crs)
+G_proj = remove_small_components_OSM(G_proj, minimum_components)
+print(f'Læst og projiceret OSM netværk ({len(G_proj.nodes)} knuder og {len(G_proj.edges)} stier).')
+
+# fjern stop udenfor polygon
+polygon = get_OSM_polygon(osm_place, crs)
 stop_gdf = remove_stops_outside_OSM(stop_gdf, polygon)
-print(f'Læst {stop_gdf.shape[0]} standere og filtreret Flextur, Plustur, 09 standere og nedlagte standere.')
+print(f'Fjernet stop udenfor {osm_place}')
 
 # gør plads i memory
 del polygon

@@ -12,8 +12,8 @@ def select_method(input_read_method_name, stop_read_method_name):
     stop_transform_method = None
     
     # tilføj cases for input
-    if input_read_method_name in ['Kvadratnet']:
-        input_read_method = kvadratnet
+    if input_read_method_name in ['Polygoner']:
+        input_read_method = polygoner
     elif input_read_method_name in ['Punkter']:
         input_read_method = punkter
     else:
@@ -40,7 +40,7 @@ def select_method(input_read_method_name, stop_read_method_name):
 # Output skal indeholde geometry_center af typen Point
 #----------------------------------------------------------------------------------------------------------
 # Befolkningskvadratnet
-def kvadratnet(path, filename, crs):
+def polygoner(path, filename, crs):
     kvadratnet = gpd.read_file(path + filename, 
                                crs=crs)
     
@@ -93,11 +93,11 @@ def filter_stops(stop_df, stop_filters):
     if stop_filters['Fjern 09 stander']:
         stop_df = stop_df[stop_df['Pos.nr.'] != 9]
     if stop_filters['Fjern Flextur']:
-        stop_df = stop_df[stop_df['Long name'].str.contains('Knudepunkt|knudepunkt')==False]
+        stop_df = stop_df[stop_df['Long name'].str.contains('knudepunkt', case=False)==False]
     if stop_filters['Fjern Plustur']:
-        stop_df = stop_df[stop_df['Long name'].str.contains('Plustur|plustur')==False]
+        stop_df = stop_df[stop_df['Long name'].str.contains('plustur', case=False)==False]
     if stop_filters['Fjern nedlagte standere']:
-        stop_df = stop_df[stop_df['Long name'].str.contains('NEDLAGT|nedlagt|Nedlagt')==False]
+        stop_df = stop_df[stop_df['Long name'].str.contains('nedlagt|nedlag|nedelagt', case=False)==False]
         
     return stop_df
 
