@@ -375,10 +375,10 @@ print(f'Henetet geometrier for korteste veje på {round(end-start, 2)} sekunder.
 #-------------------------------------------------------------------------------------------------------------------------
 def format_output(kvadratnet_df):
     # sæt sti på vejnettet som geometri
-    output = output.set_geometry('the_geom')
+    output = kvadratnet_df.set_geometry('the_geom')
     
     # behold kun relevante kolonner
-    output = kvadratnet_df[['id', 'the_geom', 'dist_total', 'dist_path', 'dist_input', 'dist_stop', 'stop_name', 'stop_id', 'stop_osmid', 'osmid']]
+    output = output[['id', 'the_geom', 'dist_total', 'dist_path', 'dist_input', 'dist_stop', 'stop_name', 'stop_id', 'stop_osmid', 'osmid']]
     
     # formater datatyper og afrunding
     output['dist_total'] = output['dist_total'].round(2)

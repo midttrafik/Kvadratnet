@@ -10,7 +10,7 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
 # Data
 
 * Geometrisk inputfil som shapefil
-    - Skal indeholde kolonnerne *id* og en geometrikolonne
+    - Skal indeholde en id kolonne og en geometrikolonne
     - Kan f.eks. være Befolkningskvadratnet, Arbejdspladser, Udannelsesinstitutioner mv.
 * Standerfil som CSV med UTM32N koordinater.
     - Skal indeholde kolonnerne: UTM32_Easting, UTM32_Northing, Long name, Kode til stoppunkt og Pos.nr.
@@ -30,7 +30,7 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
     - Hvis ja, spring ned til Kørsel af Algoritme
     - Ellers skrives en funktion som 
         1. Læser dataen
-        2. Transformerer kolonnen *geometry* til *geometry_center* med datatypen *Point*
+        2. Transformerer kolonnerne id og geometri til *id* og *geometry_center* med datatypen *Point*
         3. Tilføj else if case til *select_method*
 
 <br/>
@@ -53,7 +53,7 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
     - Cirka 15 miutter for at hente geometrien for korteste vej for hvert input
     - Cirka 40 minutter for at skrive shapefiler
 * Outputs ligger i mappen Resultater
-* Upload resultater til Webgis
+* Upload resultat til tabel i Webgis og refresh mvw som joiner dataen på den originale data
 * Evt. slet cache og pycache
 
 <br/>
