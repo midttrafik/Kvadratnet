@@ -160,6 +160,7 @@ class DataHandler():
         self._input_gdf = input_gdf.reset_index(drop=True)
         
         # tjek at geometrien er gemt som geometry_center med typen Point
+        assert 'id' in self._input_gdf.columns, f'{self._input_read_method} skal indeholde id kolonne.'
         assert 'geometry_center' in self._input_gdf.columns, f'{self._input_read_method} skal indeholde kolonnen geometry_center med punkt-geometrien.'
         assert isinstance(self._input_gdf.loc[0, 'geometry_center'], Point), 'Hvert punkt i geometry_center skal være af typen Point.'
 

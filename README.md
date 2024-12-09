@@ -10,7 +10,7 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
 # Data
 
 * Geometrisk inputfil som shapefil
-    - Skal indeholde en geometrikolonne med navnet geometry
+    - Skal indeholde kolonnerne *id* og en geometrikolonne
     - Kan f.eks. være Befolkningskvadratnet, Arbejdspladser, Udannelsesinstitutioner mv.
 * Standerfil som CSV med UTM32N koordinater.
     - Skal indeholde kolonnerne: UTM32_Easting, UTM32_Northing, Long name, Kode til stoppunkt og Pos.nr.
@@ -28,19 +28,21 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
 * Åben *data_handler.py* i VSCode
 * Er geometrikolonnen i input understøttet af *select_method* dvs. af typen Polygon eller Point?
     - Hvis ja, spring ned til Kørsel af Algoritme
-    - Ellers skrives en funktion som 1. læser dataen og 2. transformerer kolonnen *geometry* til *geometry_center* med datatypen *Point* og 3. tilføj else if case til *select_method*
+    - Ellers skrives en funktion som 
+        1. Læser dataen
+        2. Transformerer kolonnen *geometry* til *geometry_center* med datatypen *Point*
+        3. Tilføj else if case til *select_method*
 
 <br/>
 
 ## Kørsel af Algoritme
 * Åben *algoritme_script.py* i VSCode og kør. Intet skal ændres i denne fil!
 * Indtast inputs. Default værdi er angivet som [...].
-    - Konfigurationsmetoden til geometrien for input er obligatorisk. Nuværende er kun *Kvadratnet* eller *Punkter* understøttet
+    - Konfigurationsmetoden til geometrien for input er obligatorisk. Nuværende er kun *Polygoner* eller *Punkter* understøttet
     - Konfigurationsmetoden til geometrien for stop er obligatorisk. Kun *MobilePlan* er understøttet
     - Filnavnet for standerfilen er påkrævet f.eks. *MT_Stoppunkter_20241015.csv*
     - Filnavnet for inputfil er påkrævet f.eks. *befolkning_2024.shp*
     - OSM område er som udgangspunkt Region Midtjylland men kan ændres til andre administrative områder f.eks. Aarhus Kommune
-    - Som udgangspunkt gemmes en fil med korteste vej på vejnettet som Linestring
     - Flextur, Plustur og nedlagte standere fjernes som udgangspunkt
     - 09 Standere beholdes som udgangspunkt
     - Stander chunk size kan sænkes fra 500 hvis memory er et problem
@@ -57,15 +59,15 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
 <br/>
 
 ## Resultat
-1. Første output indeholder:
-    * Alle kolonner og geometrien fra input filen
-    * Navn og nummer på nærmeste stander til hver geometriske punkt
+1. Resultat indeholder:
+    * (id) Id fra input
+    * (the_geom) Linestring med korteste vej på vejnettet
+    * (stop_id) id på nærmeste stop
+    * (stop_name) navn på nærmeste stop
     * (dist\_total) Den totale distance mellem centroiden af kvadratet og gps punkt for nærmeste stander (summen af de tre næste distancer)
     * (dist\_input) Distance fra input til nærmeste OSM knude
     * (dist\_stop) Distance fra standerens gps punkt til nærmeste OSM knude
     * (dist\_path) Distance mellem inputtets OSM knude og standerens OSM knude
-2. Andet output indeholder:
-    * Det samme, dog er geometrien en Linestring som viser vejen fra objektet til nærmeste stoppested.
 
 ![screenshot](Ressourcer/Resultat_eksempel.png)
 
@@ -107,8 +109,7 @@ Programmets overordnet struktur:
     * For hver geometrisk punkts knude, find det stop med kortest distance
 3. Postprocessering
     * Find stien på vejnettet mellem input og nærmeste stop og gem som Linestring
-    * Gem fil med det oprindelig input og angivelse af nærmeste stop
-    * Gem fil med stien på vejnettet
+    * Gem fil nærmeste stop og stien på vejnettet
 
 <br/>
 <br/>
