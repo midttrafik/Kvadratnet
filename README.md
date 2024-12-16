@@ -53,8 +53,26 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
     - Cirka 15 miutter for at hente geometrien for korteste vej for hvert input
     - Cirka 40 minutter for at skrive shapefiler
 * Outputs ligger i mappen Resultater
-* Upload resultat til tabel i Webgis og refresh mvw som joiner dataen på den originale data
-* Evt. slet cache og pycache
+* Evt. slet cache og pycahce
+* Webgis
+    - Indlæs resultatet ved tøm/tilføj tabel
+    - Refresh 2*mvw med endelsen \_distance og \_line
+    - Farveskala
+        - 0-250m, #FFF5F0
+        - 250-500m, #FEE0D2
+        - 500-750m, #FCBBA1
+        - 750-1000m, #FC9272
+        - 1000-1250m, #FB6A4A
+        - 1250-1500m, #EF3B2C
+        - 1500-1750m, #CB181D
+        - 1750-2000m, #99000D
+        - 2000-5000m, #595959
+        - 5000m+, #000000
+    - Punkter/polygoner
+        - Farve fra farveskala, størrelse skal være konstant eller kvantitativ mellem 5-20, opacity=75
+    - Linjer
+        - Sort, tykkelse=3, opacity=100
+        - Farve fra farveskala, tykkelse=2, opacity=100
 
 <br/>
 
