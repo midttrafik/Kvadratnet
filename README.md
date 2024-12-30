@@ -3,6 +3,11 @@
 Beregn distancen på OSM vej- og stinettet fra geometriske objekter (f.eks. befolkningskvadratnet, arbejdspladser, uddannelsesinstitutioner) til nærmeste stoppested.<br/>
 Området er som udgangspunkt Region Midtjylland, men ethvert administrativt område fra OpenStreetMap kan anvendes.<br/>
 
+Eksempler hvor metoden er brugt:
+* Grunddata/befolkningsdata
+* CVR/virksomheder
+* Uddannelsesinstitutioner/Uddannelsesinstitutioner med elevtal
+
 <br/>
 <br/>
 
@@ -38,22 +43,22 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
 ## Kørsel af Algoritme
 * Åben *algoritme_script.py* i VSCode og kør. Intet skal ændres i denne fil!
 * Indtast inputs. Default værdi er angivet som [...].
-    - Konfigurationsmetoden til geometrien for input er obligatorisk. Nuværende er kun *Polygoner* eller *Punkter* understøttet
-    - Konfigurationsmetoden til geometrien for stop er obligatorisk. Kun *MobilePlan* er understøttet
-    - Filnavnet for standerfilen er påkrævet f.eks. *MT_Stoppunkter_20241015.csv*
-    - Filnavnet for inputfil er påkrævet f.eks. *befolkning_2024.shp*
-    - OSM område er som udgangspunkt Region Midtjylland men kan ændres til andre administrative områder f.eks. Aarhus Kommune
+    - Konfigurationsmetoden til geometrien for input er påkrævet f.eks. ***Polygoner*** eller ***Punkter***
+    - Konfigurationsmetoden til geometrien for stop er påkrævet f.eks. ***MobilePlan***
+    - Filnavnet for standerfilen er påkrævet f.eks. ***MT_Stoppunkter_20241015.csv***
+    - Filnavnet for inputfil er påkrævet f.eks. ***befolkning_2024.shp***
+    - OSM område er som udgangspunkt ***Region Midtjylland*** men kan ændres til andre administrative områder f.eks. Aarhus Kommune
     - Flextur, Plustur og nedlagte standere fjernes som udgangspunkt
     - 09 Standere beholdes som udgangspunkt
     - Stander chunk size kan sænkes fra 500 hvis memory er et problem
     - Minimum Forbundende Komponenter default 200, alle uforbundende grafer med færre knuder fjernes automatisk. Bør kunne forøges til 1000 hvis mange inputs ikke kan tildeles et nærmeste stop, men forøges den for meget vil f.eks. Venø blive frasorteret.
-* Kør script (Kvadratnet tager cirka 90 minutter)
+* Kør script (Kvadratnet tager cirka 95 minutter)
     - Cirka 10 minutter for indlæsning af data
     - Cirka 25 minutter for Dijkstra's Algoritme
-    - Cirka 15 miutter for at hente geometrien for korteste vej for hvert input
-    - Cirka 40 minutter for at skrive shapefiler
-* Outputs ligger i mappen Resultater
-* Evt. slet cache og pycahce
+    - Cirka 30 miutter for at hente geometrien for korteste vej for hvert input
+    - Cirka 30 minutter for at skrive shapefil
+* Output ligger i mappen Resultater
+* Evt. slet cache og pycache
 * Webgis
     - Indlæs resultatet ved tøm/tilføj tabel
     - Refresh 2*mvw med endelsen \_distance og \_line
@@ -69,7 +74,7 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
         - 2000-5000m, #595959
         - 5000m+, #000000
     - Punkter/polygoner
-        - Farve fra farveskala, størrelse skal være konstant eller kvantitativ mellem 5-20, opacity=75
+        - Farve fra farveskala, størrelse skal være konstant eller kvantitativ mellem 5-15, opacity=75
     - Linjer
         - Sort, tykkelse=3, opacity=100
         - Farve fra farveskala, tykkelse=2, opacity=100
@@ -77,7 +82,7 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
 <br/>
 
 ## Resultat
-1. Resultat indeholder:
+Resultatet indeholder:
     * (id) Id fra input
     * (the_geom) Linestring med korteste vej på vejnettet
     * (stop_id) id på nærmeste stop
@@ -87,14 +92,16 @@ Området er som udgangspunkt Region Midtjylland, men ethvert administrativt omr�
     * (dist\_stop) Distance fra standerens gps punkt til nærmeste OSM knude
     * (dist\_path) Distance mellem inputtets OSM knude og standerens OSM knude
 
-![screenshot](Ressourcer/Resultat_eksempel.png)
+![screenshot](Ressourcer/Resultat_kvadratnet.png)
+
+![screenshot](Ressourcer/Resultat_kvadratnet_stier.png)
 
 <br/>
 
 **_Vigtigt:_**<br/>
 Alle beregningerne indeholder en usikkerhed da geometriske punkter og standere tildeles OSM knuder.<br/>
 Vej- og stinettet fra OpenStreetMap er en graf som består af et sæt knuder og kanter.<br/>
-Selvom Region Midtjylland har over 1 million knuder, findes der ikke én knude som er præcist placeret ved det geometriske punkt.<br/>
+Selvom Region Midtjylland har 400000 knuder, findes der ikke én knude som er præcist placeret ved det geometriske punkt.<br/>
 I enkelte tilfælde betyder det at et kvadrat har en højere distance sammenlignet med nabokvadraterne, hvis den nærmeste OSM knude er langt væk.<br/>
 ![screenshot](Ressourcer/Kvadrat_usikkerhed.png)
 
@@ -151,12 +158,12 @@ Forventet tidskompleksitet med Dijkstras Algoritme: $O_1 = O(|S| |T| (|V| + |E|)
 
 
 ### Algoritme 2: heuristik
-Find korteste vej fra hvert startpunkt $S_i$ til sættet af slutpunkter $K_i$ som er tættest på $S_i$ i fugleflugtsdistance, hvor sættet af slutpunkter altid har størrelsen $|K|$. $S_i \rightarrow T_j$ for $i=1, ..., |S|$ og $j \in K_i$. <br/>
+Find korteste vej fra hvert startpunkt $S_i$ til sættet af slutpunkter $K_i$ som er tættest på $S_i$ i fugleflugtsdistance, hvor sættet af slutpunkter altid har størrelsen $|K_i|$. $S_i \rightarrow T_j$ for $i=1, ..., |S|$ og $j \in K_i$. <br/>
 Præprocesseringen af fugleflugtdistancer koster $O(|S| |T|)$. <br/>
 Løsningen er en heuristik tilgang som ikke er garanteret at give en optimalløsning, f.eks. hvis et startpunkt er meget langt væk fra de nærmeste slutpunkter, kan det forventes at distancen i fugleflugt meget anderledes en distancen på vejnettet. <br/>
 
-Antal gentagelser af korteste vej algoritmen: $|S| |K|$ <br/>
-Forventet tidskompleksitet med Dijkstras Algoritme: $O_2 = O(|S| |K| (|V| + |E|) \ln{(|V|)} + |S| |T|)$ <br/>
+Antal gentagelser af korteste vej algoritmen: $|S| |K_i|$ <br/>
+Forventet tidskompleksitet med Dijkstras Algoritme: $O_2 = O(|S| |K_i| (|V| + |E|) \ln{(|V|)} + |S| |T|)$ <br/>
 
 
 ### Algoritme 3: optimal
@@ -174,8 +181,8 @@ Forventet tidskomplexitet med Dijkstras Algortime: $O_4 = O(|T| (|V| + |E|) \ln{
 
 
 ### Konkret eksempel
-OSM i Midtjylland har $|V| \approx 1200000$ knuder og $|E| \approx 400000$ stier. <br/>
-Befolkningskvadratnettet i Midtjylland har $|S| \approx 110000$ kvadrater, Midttrafik har $|T| \approx 10000$ stoppesteder og lad sæt antal naboer til $|K|=20$. <br/>
+OSM i Midtjylland har $|V| \approx 400000$ knuder og $|E| \approx 1200000$ stier. <br/>
+Befolkningskvadratnettet i Midtjylland har $|S| \approx 110000$ kvadrater, Midttrafik har $|T| \approx 10000$ stoppesteder og sæt antal naboer til $|K|=20$. <br/>
 
 [Algoritme 2](#algoritme-2-heuristik) er $\frac{O_1}{O_2} = 500$ gange hurtigere end [Algoritme 1](#algoritme-1-optimal). <br/>
 [Algoritme 3](#algoritme-3-optimal) er $\frac{O_2}{O_3} = 20$ gange hurtigere end [Algoritme 2](#algoritme-2-heuristik). <br/>
