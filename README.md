@@ -71,7 +71,7 @@ Eksempler hvor metoden er brugt:
         - 1250-1500m, #EF3B2C
         - 1500-1750m, #CB181D
         - 1750-2000m, #99000D
-        - 2000-5000m, #595959
+        - 2000-5000m, #6B031A
         - 5000m+, #000000
     - Punkter/polygoner
         - Farve fra farveskala, størrelse skal være konstant eller kvantitativ mellem 5-15, opacity=75
