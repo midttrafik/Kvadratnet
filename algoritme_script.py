@@ -29,36 +29,26 @@ class PathAlgorithm:
         Output:
             - Kvadratnet som shapefil med distance til nærmeste stander samt navn og nummer på stander
     """
-    def __init__(self):
-        # modtag input
-        input_read_method_name = click.prompt("Navn på input konfigurationsmetode", type=str)
-        stop_read_method_name = click.prompt("Navn på stop konfigurationensmetode", type=str, default='MobilePlan')
-
-        self.stop_filename = click.prompt("Navn på stopfil uden sti til mappe", type=str)
-        self.kvadratnet_filename = click.prompt("Navn på kvadratnetsfil uden sti til mappe", type=str)
-        self.osm_place = click.prompt("Navn på administrativt OSM område", type=str, default='Region Midtjylland')
-        flex = click.prompt("Fjern Flextur", type=bool, default=True)
-        plus = click.prompt("Fjern Plustur", type=bool, default=True)
-        stander_9 = click.prompt("Fjern 09 stander", type=bool, default=False)
-        stander_nedlagt = click.prompt("Fjern nedlagte standere", type=bool, default=True)
-        self.chunk_size = click.prompt("Chunk size", type=int, default=500)
-        self.minimum_components = click.prompt("Minimum forbundende komponenter", type=int, default=200)
-        self.crs = click.prompt("CRS", type=str, default='EPSG:25832')
-        self.data_path = click.prompt("Sti til data", type=str, default='Data\\')
-        self.result_path = click.prompt("Sti til resultater", type=str, default='Resultater\\')
-
-        self.stop_filter = {
-            'Fjern Flextur':flex,
-            'Fjern Plustur':plus,
-            'Fjern 09 stander':stander_9,
-            'Fjern nedlagte standere':stander_nedlagt
-        }
-
-        self.dataHandler = DataHandler(
-            input_read_method_name=input_read_method_name,
-            stop_read_method_name=stop_read_method_name,
-            crs=self.crs
-        )
+    def __init__(self, 
+                 kvadratnet_filename,
+                 osm_place,
+                 chunk_size,
+                 minimum_components,
+                 crs,
+                 data_path,
+                 result_path,
+                 kvadratnet_loader, 
+                 stop_loader):
+        
+        self.kvadratnet_filename = kvadratnet_filename
+        self.osm_place = osm_place
+        self.chunk_size = chunk_size
+        self.minimum_components = minimum_components
+        self.crs = crs
+        self.data_path = data_path
+        self.result_path = result_path
+        self.kvadratnet_loader = kvadratnet_loader
+        self.stop_loader = stop_loader
 
         
         # sæt working directory til denne fils placering
@@ -332,22 +322,21 @@ class PathAlgorithm:
         print('1/6 påbegynder indlæsning af data.')
 
         # læs input data
-        self.dataHandler.load_and_process_input(
-            path=self.data_path,
-            filename=self.kvadratnet_filename
-        )
-        kvadratnet = self.dataHandler.get_input()
+        self.kvadratnet_loader.load_and_process()
+        kvadratnet = self.kvadratnet_loader.get_data()
+        
         kvadratnet = self.prepare_input(kvadratnet)
         print(f'Læst {kvadratnet.shape[0]} kvadrater.')
 
         # læs stop data
-        self.dataHandler.load_and_process_stops(
-            path=self.data_path,
-            filename=self.stop_filename,
-            stop_filters=self.stop_filter
-        )
-        stop_gdf = self.dataHandler.get_stops()
+        self.stop_loader.load_and_process()
+        stop_gdf = self.stop_loader.get_data()
+        
         print(f'Læst {stop_gdf.shape[0]} filtreret stop.')
+        
+        ###
+        sys.exit()
+        ###
 
         # fjern objekter udenfor polygon
         polygon = self.get_OSM_polygon(self.osm_place, self.crs)
@@ -444,5 +433,49 @@ class PathAlgorithm:
 
 
 
-algorithm = PathAlgorithm()
-algorithm.compute()
+if __name__ == '__main__':
+    # modtag input
+    stop_filename = click.prompt("Navn på stopfil uden sti til mappe", type=str)
+    kvadratnet_filename = click.prompt("Navn på kvadratnetsfil uden sti til mappe", type=str)
+    osm_place = click.prompt("Navn på administrativt OSM område", type=str, default='Region Midtjylland')
+    flex = click.prompt("Fjern Flextur", type=bool, default=True)
+    plus = click.prompt("Fjern Plustur", type=bool, default=True)
+    stander_9 = click.prompt("Fjern 09 stander", type=bool, default=False)
+    stander_nedlagt = click.prompt("Fjern nedlagte standere", type=bool, default=True)
+    chunk_size = click.prompt("Chunk size", type=int, default=500)
+    minimum_components = click.prompt("Minimum forbundende komponenter", type=int, default=200)
+    crs = click.prompt("CRS", type=str, default='EPSG:25832')
+    data_path = click.prompt("Sti til data", type=str, default='Data\\')
+    result_path = click.prompt("Sti til resultater", type=str, default='Resultater\\')
+
+
+    kvadratnet_handler = Polygoner(
+        path=data_path,
+        filename=kvadratnet_filename,
+        crs=crs
+    )
+
+    stop_handler = MobilePlan(
+        path=data_path,
+        filename=stop_filename,
+        crs=crs,
+        flex=flex,
+        plus=plus,
+        stander_9=stander_9,
+        stander_nedlagt=stander_nedlagt
+    )
+
+
+    algorithm = PathAlgorithm(
+        kvadratnet_filename=kvadratnet_filename,
+        osm_place=osm_place,
+        chunk_size=chunk_size,
+        minimum_components=minimum_components,
+        crs=crs,
+        data_path=data_path,
+        result_path=result_path,
+        kvadratnet_loader=kvadratnet_handler,
+        stop_loader=stop_handler
+    )
+
+    algorithm.compute()
