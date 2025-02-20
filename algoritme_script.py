@@ -5,6 +5,7 @@ import geopandas as gpd
 import pandas as pd
 import numpy as np
 from time import time
+from shapely import Point
 from shapely.geometry import LineString
 import os
 import sys
@@ -324,19 +325,37 @@ class PathAlgorithm:
         # læs input data
         self.kvadratnet_loader.load_and_process()
         kvadratnet = self.kvadratnet_loader.get_data()
-        
-        kvadratnet = self.prepare_input(kvadratnet)
+        assert 'id' in kvadratnet.columns, 'Input skal indeholde kolonnen: id'
+        assert 'geometry_center' in kvadratnet.columns, f'Input skal indeholde kolonnen: geometry_center'
+        assert isinstance(kvadratnet.loc[0, 'geometry_center'], Point), 'Input skal have geometry_center af typen Point'
         print(f'Læst {kvadratnet.shape[0]} kvadrater.')
+        
+        kvadratnet_rows_before = kvadratnet.shape[0]
+        kvadratnet = kvadratnet[(kvadratnet['geometry_center'].isna()==False) & (kvadratnet['geometry_center'].is_empty==False)]
+        kvadratnet_rows_after = kvadratnet.shape[0]
+        if kvadratnet_rows_after != kvadratnet_rows_before:
+            print(f'Fjernet {kvadratnet_rows_before - kvadratnet_rows_after} rækker i input med ugyldige eller tom geometri.')
+            
+        kvadratnet = self.prepare_input(kvadratnet)
+        kvadratnet = kvadratnet.reset_index(drop=True)
+
 
         # læs stop data
         self.stop_loader.load_and_process()
         stop_gdf = self.stop_loader.get_data()
+        #assert 'stop_name' in stop_gdf.columns, 'Stop skal indeholde kolonnen: stop_name'
+        #assert 'stop_code' in stop_gdf.columns, 'Stop skal indeholde kolonnen: stop_code'
+        assert 'geometry' in stop_gdf.columns, 'Stop skal indeholde kolonnen: geometry'
+        print(f'Læst {stop_gdf.shape[0]} stop.')
         
-        print(f'Læst {stop_gdf.shape[0]} filtreret stop.')
+        stop_gdf_rows_before = stop_gdf.shape[0]
+        stop_gdf = stop_gdf[(stop_gdf['geometry'].isna()==False) & (stop_gdf['geometry'].is_empty==False)]
+        stop_gdf_rows_after = stop_gdf.shape[0]
+        if stop_gdf_rows_after != stop_gdf_rows_before:
+            print(f'Fjernet {stop_gdf_rows_before - stop_gdf_rows_after} rækker i stop med ugyldig eller tom geometri.')
         
-        ###
-        sys.exit()
-        ###
+        stop_gdf = stop_gdf.reset_index(drop=True)
+        
 
         # fjern objekter udenfor polygon
         polygon = self.get_OSM_polygon(self.osm_place, self.crs)
@@ -424,6 +443,8 @@ class PathAlgorithm:
 
         # formater output
         output = self.format_output(kvadratnet)
+        
+        sys.exit()
 
         # skriv fil med objekter
         output_filename = self.write_output(output=output, path=self.result_path, filename=self.kvadratnet_filename, suffix='distance')
@@ -449,7 +470,13 @@ if __name__ == '__main__':
     result_path = click.prompt("Sti til resultater", type=str, default='Resultater\\')
 
 
-    kvadratnet_handler = Polygoner(
+    #kvadratnet_handler = Polygoner(
+    #    path=data_path,
+    #    filename=kvadratnet_filename,
+    #    crs=crs
+    #)
+    
+    kvadratnet_handler = Punkter(
         path=data_path,
         filename=kvadratnet_filename,
         crs=crs
