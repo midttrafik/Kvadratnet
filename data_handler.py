@@ -63,7 +63,7 @@ class MobilePlan(DataLoader):
         # verificer at påkrævede kolonner eksisterer
         cols_to_keep = ['Kode til stoppunkt', 'Pos.nr.', 'Long name', 'UTM32_Easting', 'UTM32_Northing']
         for col in cols_to_keep:
-            assert col in stop_df.columns, f'Standertabellen skal indeholde kolonnen {col}.'
+            assert col in stop_df.columns, f'MobilePlan fil skal indeholde kolonnen {col}.'
         
         # behold kun påkrævede kolonner
         stop_df = stop_df[cols_to_keep]
@@ -87,6 +87,8 @@ class MobilePlan(DataLoader):
             crs=self.crs
         )
         stop_gdf = stop_gdf[['Kode til stoppunkt', 'Long name', 'geometry']]
+        stop_gdf = stop_gdf.rename(columns={'Kode til stoppunkt': 'stop_code', 
+                                            'Long name': 'stop_name'})
         self.data = stop_gdf
 
 

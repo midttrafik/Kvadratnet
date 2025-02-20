@@ -194,8 +194,8 @@ class PathAlgorithm:
                 # opdater distance fra stop til node, stop navn og stop nummer
                 stop_gdf_ig_match = stop_gdf[stop_gdf['iGraph_id']==stop_nodes_ig[min_distance_stop_idx]]
                 kvadratnet_df.loc[idx, 'dist_stop'] = stop_gdf_ig_match['dist_stop'].head(1).values
-                kvadratnet_df.loc[idx, 'stop_name'] = stop_gdf_ig_match['Long name'].head(1).values
-                kvadratnet_df.loc[idx, 'stop_id'] = stop_gdf_ig_match['Kode til stoppunkt'].head(1).values
+                kvadratnet_df.loc[idx, 'stop_name'] = stop_gdf_ig_match['stop_name'].head(1).values
+                kvadratnet_df.loc[idx, 'stop_id'] = stop_gdf_ig_match['stop_code'].head(1).values
                 kvadratnet_df.loc[idx, 'stop_osmid'] = stop_gdf_ig_match['osmid'].head(1).values
                 kvadratnet_df.loc[idx, 'stop_iGraph_id'] = stop_gdf_ig_match['iGraph_id'].head(1).values
                 
@@ -343,8 +343,8 @@ class PathAlgorithm:
         # læs stop data
         self.stop_loader.load_and_process()
         stop_gdf = self.stop_loader.get_data()
-        #assert 'stop_name' in stop_gdf.columns, 'Stop skal indeholde kolonnen: stop_name'
-        #assert 'stop_code' in stop_gdf.columns, 'Stop skal indeholde kolonnen: stop_code'
+        assert 'stop_name' in stop_gdf.columns, 'Stop skal indeholde kolonnen: stop_name'
+        assert 'stop_code' in stop_gdf.columns, 'Stop skal indeholde kolonnen: stop_code'
         assert 'geometry' in stop_gdf.columns, 'Stop skal indeholde kolonnen: geometry'
         print(f'Læst {stop_gdf.shape[0]} stop.')
         
@@ -443,8 +443,6 @@ class PathAlgorithm:
 
         # formater output
         output = self.format_output(kvadratnet)
-        
-        sys.exit()
 
         # skriv fil med objekter
         output_filename = self.write_output(output=output, path=self.result_path, filename=self.kvadratnet_filename, suffix='distance')
@@ -470,17 +468,17 @@ if __name__ == '__main__':
     result_path = click.prompt("Sti til resultater", type=str, default='Resultater\\')
 
 
-    #kvadratnet_handler = Polygoner(
-    #    path=data_path,
-    #    filename=kvadratnet_filename,
-    #    crs=crs
-    #)
-    
-    kvadratnet_handler = Punkter(
+    kvadratnet_handler = Polygoner(
         path=data_path,
         filename=kvadratnet_filename,
         crs=crs
     )
+    
+    #kvadratnet_handler = Punkter(
+    #    path=data_path,
+    #    filename=kvadratnet_filename,
+    #    crs=crs
+    #)
 
     stop_handler = MobilePlan(
         path=data_path,
