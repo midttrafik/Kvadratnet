@@ -65,7 +65,7 @@ class PathAlgorithm:
     #----------------------------------------------------------------------------------------------------------
     def prepare_input(self, input_gdf):
         # definer kolonnerne vi ønsker at udregne
-        stort_tal = 100*1000 # 100km er et stort tal cirka ligmed uendelighed 
+        stort_tal = 100000.0 # initialiser float til 100km
         input_gdf['dist_path'] = stort_tal
         input_gdf['dist_input'] = stort_tal
         input_gdf['dist_stop'] = stort_tal
@@ -463,21 +463,21 @@ if __name__ == '__main__':
     chunk_size = click.prompt("Chunk size", type=int, default=500)
     minimum_components = click.prompt("Minimum forbundende komponenter", type=int, default=200)
     crs = click.prompt("CRS", type=str, default='EPSG:25832')
-    data_path = click.prompt("Sti til data", type=str, default='Data\\')
-    result_path = click.prompt("Sti til resultater", type=str, default='Resultater\\')
+    data_path = click.prompt("Sti til data", type=str, default='src\Data\\')
+    result_path = click.prompt("Sti til resultater", type=str, default='src\Resultater\\')
 
 
-    #kvadratnet_handler = Polygoner(
-    #    path=data_path,
-    #    filename=kvadratnet_filename,
-    #    crs=crs
-    #)
-    
-    kvadratnet_handler = Punkter(
+    kvadratnet_handler = Polygoner(
         path=data_path,
         filename=kvadratnet_filename,
         crs=crs
     )
+    
+    #kvadratnet_handler = Punkter(
+    #    path=data_path,
+    #    filename=kvadratnet_filename,
+    #    crs=crs
+    #)
 
     stop_handler = MobilePlan(
         path=data_path,

@@ -52,13 +52,13 @@ Eksempler hvor metoden er brugt:
     - 09 Standere beholdes som udgangspunkt
     - Stander chunk size kan sænkes fra 500 hvis memory er et problem
     - Minimum Forbundende Komponenter default 200, alle uforbundende grafer med færre knuder fjernes automatisk. Bør kunne forøges til 1000 hvis mange inputs ikke kan tildeles et nærmeste stop, men forøges den for meget vil f.eks. Venø blive frasorteret.
-* Kør script (Kvadratnet tager cirka 95 minutter)
+* Kør script (Kvadratnet tager cirka 120 minutter)
     - Cirka 10 minutter for indlæsning af data
-    - Cirka 25 minutter for Dijkstra's Algoritme
-    - Cirka 30 miutter for at hente geometrien for korteste vej for hvert input
+    - Cirka 35 minutter for Dijkstra's Algoritme
+    - Cirka 45 miutter for at hente geometrien for korteste vej for hvert input
+        - OBS! Det er helt fint at "RuntimeWarning: Couldn't reach some vertices." forekommer da det f.eks. skyldes beboelse på ikke-brofaste øer.
     - Cirka 30 minutter for at skrive shapefil
 * Output ligger i mappen Resultater
-* Evt. slet cache og pycache
 * Webgis
     - Indlæs resultatet ved tøm/tilføj tabel
     - Refresh 2*mvw med endelsen \_distance og \_line
