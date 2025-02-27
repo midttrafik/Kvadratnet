@@ -1,4 +1,5 @@
 import pandas as pd
+import geopandas as gpd
 from src.abstract.TaskStrategy import TaskStrategy
 
 class ShortestPath(TaskStrategy):
@@ -58,8 +59,10 @@ class ShortestPath(TaskStrategy):
         return kvadratnet_df
     
     
-    def should_routes_be_calculated(self) -> bool:
-        return True
+    def get_route_items(self, kvadratnet):
+        centroids = kvadratnet['iGraph_id'].tolist()
+        closest_stops = kvadratnet['stop_iGraph_id'].tolist()
+        return centroids, closest_stops
     
     
     def prepare_output(self,
@@ -84,5 +87,11 @@ class ShortestPath(TaskStrategy):
     
     
     def get_output_suffix(self):
-        return 'shortestpath'
+        return 'shortestpath.shp'
+    
+    
+    def write_output(self, output, path, filename) -> None:
+        output.to_file(path + filename, 
+                       driver='ESRI Shapefile')
+        
     

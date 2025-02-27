@@ -67,19 +67,6 @@ class PathAlgorithm:
     
     
     #----------------------------------------------------------------------------------------------------------
-    def prepare_input(self, input_gdf):
-        # definer kolonnerne vi ønsker at udregne
-        stort_tal = 100000.0 # initialiser float til 100km
-        input_gdf['dist_path'] = stort_tal
-        input_gdf['dist_input'] = stort_tal
-        input_gdf['dist_stop'] = stort_tal
-        input_gdf['stop_name'] = None
-        input_gdf['stop_id'] = None
-        input_gdf['stop_osmid'] = None
-        input_gdf['stop_iGraph_id'] = None
-        return input_gdf
-
-
     def read_and_project_OSM(self, place, crs):
         # hent OSM lag
         G = ox.graph_from_place(place, 
@@ -168,45 +155,6 @@ class PathAlgorithm:
         return distances
 
 
-    def argmin(self, lst):
-        min_val = min(lst)
-        return lst.index(min_val), min_val
-
-
-    def add_smallest_distance_to_centroid(self,
-                                          kvadratnet_df, 
-                                          stop_gdf, 
-                                          distances, 
-                                          centroid_nodes_ig, 
-                                          stop_nodes_ig):
-        
-        number_of_stops = len(distances)
-        
-        # iterer igennem igraph listen af centroider
-        for idx, centroid_node_ig in enumerate(centroid_nodes_ig):
-            # find det stop index som minimerer distancen mellem stop og centroide
-            min_distance_stop_idx, min_distance = self.argmin([distances[stop_idx][centroid_node_ig] for stop_idx in range(0, number_of_stops)])
-            min_distance_formatted = round(min_distance, ndigits=2)
-            
-            if min_distance < kvadratnet_df.loc[idx, 'dist_path']:
-                # opdater distancen hvis den er mindre end den nuværende
-                kvadratnet_df.loc[idx, 'dist_path'] = min_distance_formatted
-                
-                # opdater distance fra stop til node, stop navn og stop nummer
-                stop_gdf_ig_match = stop_gdf[stop_gdf['iGraph_id']==stop_nodes_ig[min_distance_stop_idx]]
-                kvadratnet_df.loc[idx, 'dist_stop'] = stop_gdf_ig_match['dist_stop'].head(1).values
-                kvadratnet_df.loc[idx, 'stop_name'] = stop_gdf_ig_match['stop_name'].head(1).values
-                kvadratnet_df.loc[idx, 'stop_id'] = stop_gdf_ig_match['stop_code'].head(1).values
-                kvadratnet_df.loc[idx, 'stop_osmid'] = stop_gdf_ig_match['osmid'].head(1).values
-                kvadratnet_df.loc[idx, 'stop_iGraph_id'] = stop_gdf_ig_match['iGraph_id'].head(1).values
-                
-        # beregn total distance fra centroid -> node -> node -> stop
-        kvadratnet_df['dist_total'] = (kvadratnet_df['dist_path'] 
-                                    + kvadratnet_df['dist_input'] 
-                                    + kvadratnet_df['dist_stop'])
-                
-        return kvadratnet_df
-
     def find_shortest_distance(self, 
                                kvadratnet, 
                                stop_gdf, 
@@ -232,11 +180,6 @@ class PathAlgorithm:
             distances = self.multi_source_all_targets_distances(stop_nodes_ig_noduplicates, G_ig)
 
             # opdater kvadratnet med korteste distance
-            #kvadratnet = self.add_smallest_distance_to_centroid(kvadratnet, 
-            #                                            stop_gdf, 
-            #                                            distances, 
-            #                                            centroid_nodes_ig,
-            #                                            stop_nodes_ig_noduplicates) #########################################
             kvadratnet = self.task_strategy.associate_centroids_and_stops(kvadratnet,
                                                                           stop_gdf,
                                                                           distances,
@@ -245,11 +188,6 @@ class PathAlgorithm:
         
             time_end = time()
             print(f'Processerede chunk på {round(time_end-time_start, 2)} sekunder.')
-
-        # beregn total distance fra centroid -> node -> node -> stop ###############################################
-        #kvadratnet['dist_total'] = (kvadratnet['dist_path'] 
-        #                            + kvadratnet['dist_input'] 
-        #                            + kvadratnet['dist_stop'])
         
         return kvadratnet
 
@@ -282,48 +220,23 @@ class PathAlgorithm:
         return route_line
 
 
-    def get_routes(self, kvadratnet, G_ig, G_proj):
+    def get_routes(self, kvadratnet, sources, destinations, G_ig, G_proj):
         kvadratnet['the_geom'] = None
-        for i in range(0, kvadratnet.shape[0]):
-            source = kvadratnet.loc[i, 'iGraph_id']
-            destination = kvadratnet.loc[i, 'stop_iGraph_id']
+        for i in range(0, len(sources)):
+            source = sources[i]
+            destination = destinations[i]
             kvadratnet.loc[i, 'the_geom'] = self.get_route_geometry(source, destination, G_ig, G_proj)
             if i % 1000 == 0:
                 print(f'Hentet {i}/{kvadratnet.shape[0]} geometrier.')
-                
         return kvadratnet
 
 
     #-------------------------------------------------------------------------------------------------------------------------
-    def format_output(self, kvadratnet_df):
-        # sæt sti på vejnettet som geometri
-        output = kvadratnet_df.set_geometry('the_geom')
-        
-        # behold kun relevante kolonner
-        output = output[['id', 'the_geom', 'dist_total', 'dist_path', 'dist_input', 'dist_stop', 'stop_name', 'stop_id', 'stop_osmid', 'osmid']]
-        
-        # formater datatyper og afrunding
-        output['dist_total'] = output['dist_total'].round(2)
-        output['dist_path'] = output['dist_path'].round(2)
-        output['dist_input'] = output['dist_input'].round(2)
-        output['dist_stop'] = output['dist_stop'].round(2)
-        output['stop_name'] = output['stop_name'].astype(str)
-        output['stop_id'] = output['stop_id'].astype(str)
-        output['stop_osmid'] = output['stop_osmid'].astype(str)
-        output['osmid'] = output['osmid'].astype(str)
-        
-        return output
-
-
-    def write_output(self, output, path, filename, suffix):
-        # tilføj _distance som endelse på filnavnet
-        suffix_formatted = '_' + suffix + '.'
-        output_filename = suffix_formatted.join(filename.split('.'))
-        
-        # skriv shapefil
-        output.to_file(path + output_filename, 
-                    driver='ESRI Shapefile')
-        
+    def add_suffix_to_output_filename(self, suffix, filename):
+        # tilføj _suffix som endelse på filnavnet
+        suffix_formatted = '_' + suffix
+        #output_filename = suffix_formatted.join(filename.split('.')) ################################
+        output_filename = filename.split('.')[0] + suffix_formatted
         return output_filename
 
 
@@ -346,7 +259,6 @@ class PathAlgorithm:
         if kvadratnet_rows_after != kvadratnet_rows_before:
             print(f'Fjernet {kvadratnet_rows_before - kvadratnet_rows_after} rækker i input med ugyldige eller tom geometri.')
             
-        #kvadratnet = self.prepare_input(kvadratnet) ###########################
         kvadratnet = self.task_strategy.prepare_input(kvadratnet)
         kvadratnet = kvadratnet.reset_index(drop=True)
 
@@ -441,8 +353,12 @@ class PathAlgorithm:
         print('-'*50)
         print('5/6 Henter geometrier for korteste veje.')
 
-        if self.task_strategy.should_routes_be_calculated(): #########################
-            kvadratnet = self.get_routes(kvadratnet, G_ig, G_proj)
+        
+        sources, destinations = self.task_strategy.get_route_items(kvadratnet)
+        if len(sources) == 0:
+            print('Ingen geometrier hentet.')
+        else:
+            kvadratnet = self.get_routes(kvadratnet, sources, destinations, G_ig, G_proj)
 
         end = time()
         print(f'Henetet geometrier for korteste veje på {round(end-start, 2)} sekunder.')
@@ -454,15 +370,15 @@ class PathAlgorithm:
         start = time()
 
         # formater output
-        #output = self.format_output(kvadratnet) ########################################
         output = self.task_strategy.prepare_output(kvadratnet)
         
         if write_result == False:
             sys.exit()
 
         # skriv fil med objekter
-        suffix = self.task_strategy.get_output_suffix() #########################################
-        output_filename = self.write_output(output=output, path=self.result_path, filename=self.kvadratnet_filename, suffix=suffix) ########
+        suffix = self.task_strategy.get_output_suffix()
+        output_filename = self.add_suffix_to_output_filename(suffix, self.kvadratnet_filename)
+        self.task_strategy.write_output(output, self.result_path, output_filename)
 
         end = time()
         print(f'Resultat gemt som {output_filename} på {round(end-start, 2)} sekunder.')

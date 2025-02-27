@@ -15,7 +15,7 @@ class TaskStrategy(ABC):
         pass
     
     @abstractmethod
-    def should_routes_be_calculated(self):
+    def get_route_items(self, kvadratnet):
         pass
     
     @abstractmethod
@@ -25,6 +25,10 @@ class TaskStrategy(ABC):
     
     @abstractmethod
     def get_output_suffix(self):
+        pass
+    
+    @abstractmethod
+    def write_output(self, output, path, filename):
         pass
     
     
