@@ -7,6 +7,8 @@ sys.path.insert(0, os.getcwd())
 
 from src.abstract.DataLoader import DataLoader
 from src.strategy.DataStrategy import Polygoner, Punkter, MobilePlan
+from src.abstract.TaskStrategy import TaskStrategy
+from src.strategy.TaskStrategy import ShortestPath
 
 import osmnx as ox
 import networkx as nx
@@ -43,7 +45,8 @@ class PathAlgorithm:
                  data_path,
                  result_path,
                  kvadratnet_loader: DataLoader, 
-                 stop_loader: DataLoader):
+                 stop_loader: DataLoader,
+                 task_strategy: TaskStrategy):
         
         self.kvadratnet_filename = kvadratnet_filename
         self.osm_place = osm_place
@@ -54,6 +57,7 @@ class PathAlgorithm:
         self.result_path = result_path
         self.kvadratnet_loader = kvadratnet_loader
         self.stop_loader = stop_loader
+        self.task_strategy = task_strategy
 
         # aktiver caching
         ox.settings.use_cache = True
@@ -196,6 +200,11 @@ class PathAlgorithm:
                 kvadratnet_df.loc[idx, 'stop_osmid'] = stop_gdf_ig_match['osmid'].head(1).values
                 kvadratnet_df.loc[idx, 'stop_iGraph_id'] = stop_gdf_ig_match['iGraph_id'].head(1).values
                 
+        # beregn total distance fra centroid -> node -> node -> stop
+        kvadratnet_df['dist_total'] = (kvadratnet_df['dist_path'] 
+                                    + kvadratnet_df['dist_input'] 
+                                    + kvadratnet_df['dist_stop'])
+                
         return kvadratnet_df
 
     def find_shortest_distance(self, 
@@ -223,19 +232,24 @@ class PathAlgorithm:
             distances = self.multi_source_all_targets_distances(stop_nodes_ig_noduplicates, G_ig)
 
             # opdater kvadratnet med korteste distance
-            kvadratnet = self.add_smallest_distance_to_centroid(kvadratnet, 
-                                                        stop_gdf, 
-                                                        distances, 
-                                                        centroid_nodes_ig,
-                                                        stop_nodes_ig_noduplicates)
+            #kvadratnet = self.add_smallest_distance_to_centroid(kvadratnet, 
+            #                                            stop_gdf, 
+            #                                            distances, 
+            #                                            centroid_nodes_ig,
+            #                                            stop_nodes_ig_noduplicates) #########################################
+            kvadratnet = self.task_strategy.associate_centroids_and_stops(kvadratnet,
+                                                                          stop_gdf,
+                                                                          distances,
+                                                                          centroid_nodes_ig,
+                                                                          stop_nodes_ig_noduplicates)
         
             time_end = time()
             print(f'Processerede chunk på {round(time_end-time_start, 2)} sekunder.')
 
-        # beregn total distance fra centroid -> node -> node -> stop
-        kvadratnet['dist_total'] = (kvadratnet['dist_path'] 
-                                    + kvadratnet['dist_input'] 
-                                    + kvadratnet['dist_stop'])
+        # beregn total distance fra centroid -> node -> node -> stop ###############################################
+        #kvadratnet['dist_total'] = (kvadratnet['dist_path'] 
+        #                            + kvadratnet['dist_input'] 
+        #                            + kvadratnet['dist_stop'])
         
         return kvadratnet
 
@@ -332,7 +346,8 @@ class PathAlgorithm:
         if kvadratnet_rows_after != kvadratnet_rows_before:
             print(f'Fjernet {kvadratnet_rows_before - kvadratnet_rows_after} rækker i input med ugyldige eller tom geometri.')
             
-        kvadratnet = self.prepare_input(kvadratnet)
+        #kvadratnet = self.prepare_input(kvadratnet) ###########################
+        kvadratnet = self.task_strategy.prepare_input(kvadratnet)
         kvadratnet = kvadratnet.reset_index(drop=True)
 
 
@@ -426,7 +441,8 @@ class PathAlgorithm:
         print('-'*50)
         print('5/6 Henter geometrier for korteste veje.')
 
-        kvadratnet = self.get_routes(kvadratnet, G_ig, G_proj)
+        if self.task_strategy.should_routes_be_calculated(): #########################
+            kvadratnet = self.get_routes(kvadratnet, G_ig, G_proj)
 
         end = time()
         print(f'Henetet geometrier for korteste veje på {round(end-start, 2)} sekunder.')
@@ -438,13 +454,15 @@ class PathAlgorithm:
         start = time()
 
         # formater output
-        output = self.format_output(kvadratnet)
+        #output = self.format_output(kvadratnet) ########################################
+        output = self.task_strategy.prepare_output(kvadratnet)
         
         if write_result == False:
             sys.exit()
 
         # skriv fil med objekter
-        output_filename = self.write_output(output=output, path=self.result_path, filename=self.kvadratnet_filename, suffix='distance')
+        suffix = self.task_strategy.get_output_suffix() #########################################
+        output_filename = self.write_output(output=output, path=self.result_path, filename=self.kvadratnet_filename, suffix=suffix) ########
 
         end = time()
         print(f'Resultat gemt som {output_filename} på {round(end-start, 2)} sekunder.')
@@ -488,6 +506,8 @@ if __name__ == '__main__':
         stander_9=stander_9,
         stander_nedlagt=stander_nedlagt
     )
+    
+    task_strategy = ShortestPath()
 
 
     algorithm = PathAlgorithm(
@@ -499,7 +519,8 @@ if __name__ == '__main__':
         data_path=data_path,
         result_path=result_path,
         kvadratnet_loader=kvadratnet_handler,
-        stop_loader=stop_handler
+        stop_loader=stop_handler,
+        task_strategy=task_strategy
     )
 
-    algorithm.compute(write_result=False)
+    algorithm.compute(write_result=True)
