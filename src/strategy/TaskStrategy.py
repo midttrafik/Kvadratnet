@@ -1,5 +1,6 @@
 import pandas as pd
 import geopandas as gpd
+import numpy as np
 from src.abstract.TaskStrategy import TaskStrategy
 
 class ShortestPath(TaskStrategy):
@@ -20,10 +21,6 @@ class ShortestPath(TaskStrategy):
         return input_gdf
     
     
-    def argmin(self, lst):
-        min_val = min(lst)
-        return lst.index(min_val), min_val
-    
     def associate_centroids_and_stops(self, 
                                       kvadratnet_df,
                                       stop_gdf,
@@ -31,30 +28,37 @@ class ShortestPath(TaskStrategy):
                                       centroid_nodes_ig,
                                       stop_nodes_ig):
         
-        number_of_stops = len(distances)
+        distances = np.array(distances)
         
         # iterer igennem igraph listen af centroider
         for idx, centroid_node_ig in enumerate(centroid_nodes_ig):
             # find det stop index som minimerer distancen mellem stop og centroide
-            min_distance_stop_idx, min_distance = self.argmin([distances[stop_idx][centroid_node_ig] for stop_idx in range(0, number_of_stops)])
-            min_distance_formatted = round(min_distance, ndigits=2)
+            min_distance_stop_idx = np.argmin(distances[:, centroid_node_ig])
+            min_distance = distances[min_distance_stop_idx, centroid_node_ig]
+            min_distance_formatted = round(min_distance, 2)
             
             if min_distance < kvadratnet_df.loc[idx, 'dist_path']:
                 # opdater distancen hvis den er mindre end den nuværende
                 kvadratnet_df.loc[idx, 'dist_path'] = min_distance_formatted
                 
-                # opdater distance fra stop til node, stop navn og stop nummer
-                stop_gdf_ig_match = stop_gdf[stop_gdf['iGraph_id']==stop_nodes_ig[min_distance_stop_idx]]
-                kvadratnet_df.loc[idx, 'dist_stop'] = stop_gdf_ig_match['dist_stop'].head(1).values
-                kvadratnet_df.loc[idx, 'stop_name'] = stop_gdf_ig_match['stop_name'].head(1).values
-                kvadratnet_df.loc[idx, 'stop_id'] = stop_gdf_ig_match['stop_code'].head(1).values
-                kvadratnet_df.loc[idx, 'stop_osmid'] = stop_gdf_ig_match['osmid'].head(1).values
-                kvadratnet_df.loc[idx, 'stop_iGraph_id'] = stop_gdf_ig_match['iGraph_id'].head(1).values
+                # find matchende stop
+                stop_igraph_id = stop_nodes_ig[min_distance_stop_idx]
+                stop_gdf_match = stop_gdf[stop_gdf['iGraph_id'] == stop_igraph_id]
+                
+                # opdater værdier som skal gemmes
+                if not stop_gdf_match.empty:
+                    kvadratnet_df.loc[idx, 'dist_stop'] = stop_gdf_match['dist_stop'].values[0]
+                    kvadratnet_df.loc[idx, 'stop_name'] = stop_gdf_match['stop_name'].values[0]
+                    kvadratnet_df.loc[idx, 'stop_id'] = stop_gdf_match['stop_code'].values[0]
+                    kvadratnet_df.loc[idx, 'stop_osmid'] = stop_gdf_match['osmid'].values[0]
+                    kvadratnet_df.loc[idx, 'stop_iGraph_id'] = stop_gdf_match['iGraph_id'].values[0]
         
         # beregn total distance fra centroid -> node -> node -> stop
         kvadratnet_df['dist_total'] = (kvadratnet_df['dist_path'] 
                                     + kvadratnet_df['dist_input'] 
                                     + kvadratnet_df['dist_stop'])
+        
+        del distances
                 
         return kvadratnet_df
     

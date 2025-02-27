@@ -235,7 +235,6 @@ class PathAlgorithm:
     def add_suffix_to_output_filename(self, suffix, filename):
         # tilføj _suffix som endelse på filnavnet
         suffix_formatted = '_' + suffix
-        #output_filename = suffix_formatted.join(filename.split('.')) ################################
         output_filename = filename.split('.')[0] + suffix_formatted
         return output_filename
 
