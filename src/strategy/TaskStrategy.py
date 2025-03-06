@@ -3,6 +3,9 @@ import geopandas as gpd
 import numpy as np
 from src.abstract.TaskStrategy import TaskStrategy
 
+#####################################################
+# Find det nærmeste stop
+#####################################################
 class ShortestPath(TaskStrategy):
     def __init__(self) -> None:
         pass
@@ -97,5 +100,52 @@ class ShortestPath(TaskStrategy):
     def write_output(self, output, path, filename) -> None:
         output.to_file(path + filename, 
                        driver='ESRI Shapefile')
+
+
+#####################################################
+# Find alle stop indenfor distance
+#####################################################
+class AllNearbyStops(TaskStrategy):
+    def __init__(self, max_distances) -> None:
+        self.max_distances = max_distances
+        pass
+    
+    def prepare_input(self, 
+                      input_gdf):
+        pass
+        return input_gdf
+    
+    
+    def associate_centroids_and_stops(self, 
+                                      kvadratnet_df,
+                                      stop_gdf,
+                                      distances,
+                                      centroid_nodes_ig,
+                                      stop_nodes_ig):
         
+        pass     
+        return kvadratnet_df
+    
+    
+    def get_route_items(self, kvadratnet):
+        centroids = None
+        closest_stops = None
+        return centroids, closest_stops
+    
+    
+    def prepare_output(self,
+                       kvadratnet_df):
+        output = None
+        return output
+    
+    
+    def get_output_suffix(self):
+        return None
+    
+    
+    def write_output(self, output, path, filename) -> None:
+        pass
+
+
+    
     
