@@ -11,6 +11,7 @@ from src.strategy.TaskStrategy import ShortestPath
 
 import unittest
 
+
 class TestShortestPath(unittest.TestCase):
     def setUp(self):
         # Example centroid data
@@ -18,7 +19,7 @@ class TestShortestPath(unittest.TestCase):
             'centroid_id': [0, 1, 2, 3],  # ID
             'dist_path': [100000, 100000, 100000, 9],  # Current shortest distances
             'dist_input': [5, 10, 7, 2],  # Distance from centroid to nearest OSMID
-            'dist_stop': [None, None, None, 2],  
+            'dist_stop': [100000, 100000, 100000, 2],  
             'stop_name': [None, None, None, 'Stop E'],
             'stop_id': [None, None, None, 105],
             'stop_osmid': [None, None, None, 1005],
@@ -49,6 +50,8 @@ class TestShortestPath(unittest.TestCase):
         
         self.task_strategy = ShortestPath()
 
+
+    # test om navn på nærmeste stop tildeles korrekt til hvert kvadrat
     def test_stop_name(self):
         updated_kvadratnet_df = self.task_strategy.associate_centroids_and_stops(
                                                               self.kvadratnet_df, 
@@ -61,6 +64,22 @@ class TestShortestPath(unittest.TestCase):
         
         self.assertEqual(updated_kvadratnet_df['stop_name'].tolist(), expected_stop_names)
     
+    
+    # test om distance fra stop til osm node tildeles korrekt til hvert kvadrat
+    def test_stop_dist(self):
+        updated_kvadratnet_df = self.task_strategy.associate_centroids_and_stops(
+                                                              self.kvadratnet_df, 
+                                                              self.stop_gdf, 
+                                                              self.distances, 
+                                                              self.centroid_nodes_ig, 
+                                                              self.stop_nodes_ig)
+
+        expected_stop_dist = [2, 4, 2, 2]
+        
+        self.assertEqual(updated_kvadratnet_df['dist_stop'].tolist(), expected_stop_dist)
+    
+    
+    # test om total distance udregnes korrekt for hvert kvadrat
     def test_total_dist(self):
         updated_kvadratnet_df = self.task_strategy.associate_centroids_and_stops(
                                                               self.kvadratnet_df, 
