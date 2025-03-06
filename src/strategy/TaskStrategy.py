@@ -128,8 +128,9 @@ class AllNearbyStops(TaskStrategy):
     
     
     def get_route_items(self, kvadratnet):
-        centroids = None
-        closest_stops = None
+        # der skal ikke findes rutegeometrier fra hvert kvadrat til hvert stop indenfor distance
+        centroids = []
+        closest_stops = []
         return centroids, closest_stops
     
     

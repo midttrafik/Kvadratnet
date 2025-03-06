@@ -56,6 +56,21 @@ class TestShortestPath(unittest.TestCase):
     # test om filnavnet får den rigtige endelse
     def test_output_suffix(self):
         self.assertEqual(self.task_strategy.get_output_suffix(), 'shortestpath.shp')
+    
+    
+    # test om der returneres centroide og stop id'er så rutegeometrier kan udregnes
+    def test_route_items(self):
+        updated_kvadratnet_df = self.task_strategy.associate_centroids_and_stops(
+                                                              self.kvadratnet_df, 
+                                                              self.stop_gdf, 
+                                                              self.distances, 
+                                                              self.centroid_nodes_ig, 
+                                                              self.stop_nodes_ig)
+        
+        centroids, closest_stops = self.task_strategy.get_route_items(updated_kvadratnet_df)
+                
+        self.assertTrue(len(centroids) > 0)
+        self.assertTrue(len(closest_stops) > 0)
 
 
     # test om navn på nærmeste stop tildeles korrekt til hvert kvadrat
@@ -142,6 +157,21 @@ class TestAllNearbyStops(unittest.TestCase):
     # test om filnavnet får den rigtige endelse
     def test_output_suffix(self):
         self.assertEqual(self.task_strategy.get_output_suffix(), 'allnearbystops.csv')
+    
+    
+    # test at der ikke returneres centroide og stop id'er da der rutegeometrier ikke skal skrives
+    def test_route_items(self):
+        updated_kvadratnet_df = self.task_strategy.associate_centroids_and_stops(
+                                                              self.kvadratnet_df, 
+                                                              self.stop_gdf, 
+                                                              self.distances, 
+                                                              self.centroid_nodes_ig, 
+                                                              self.stop_nodes_ig)
+        
+        centroids, closest_stops = self.task_strategy.get_route_items(updated_kvadratnet_df)
+                
+        self.assertTrue(len(centroids) == 0)
+        self.assertTrue(len(closest_stops) == 0)
         
         
     # test om listen af stop udregnes korrekt for hvert kvadrat
