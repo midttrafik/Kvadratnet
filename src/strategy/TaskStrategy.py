@@ -106,7 +106,8 @@ class ShortestPath(TaskStrategy):
 # Find alle stop indenfor distance
 #####################################################
 class AllNearbyStops(TaskStrategy):
-    def __init__(self, max_distances) -> None:
+    def __init__(self, max_distances: list) -> None:
+        assert isinstance(max_distances, list), 'max_distance skal være en liste f.eks. [500] eller [500, 1000]'
         self.max_distances = max_distances
     
     
@@ -128,7 +129,30 @@ class AllNearbyStops(TaskStrategy):
                                       centroid_nodes_ig,
                                       stop_nodes_ig):
         
-        pass     
+        distances = np.array(distances)
+        
+        # iterer igennem igraph listen af centroider
+        for idx, centroid_node_ig in enumerate(centroid_nodes_ig):
+            
+            # iterer igennem alle max distancer
+            for max_dist in self.max_distances:
+                # find alle stop med kortere distance
+                dist_mask = distances[:, centroid_node_ig] <= max_dist
+                
+                # find deres igraph id'er og find datarækkerne som matcher
+                stop_igraph_ids = stop_nodes_ig[dist_mask]
+                stop_gdf_match = stop_gdf[stop_gdf['iGraph_id'].isin(stop_igraph_ids)]
+                
+                # lav stop id'er til en tekst og join til en samlet tekststreng og sammensæt med nuværende
+                new_nearby_stops = ';'.join(stop_gdf_match['stop_code'].astype(str).tolist())
+                old_nearby_stops = kvadratnet_df.loc[idx, f'stops_{max_dist}']
+                if old_nearby_stops == '':
+                    kvadratnet_df.loc[idx, f'stops_{max_dist}'] = new_nearby_stops
+                else:
+                    kvadratnet_df.loc[idx, f'stops_{max_dist}'] = old_nearby_stops + ';' + new_nearby_stops
+        
+        del distances
+        
         return kvadratnet_df
     
     

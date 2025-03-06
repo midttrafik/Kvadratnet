@@ -6,9 +6,9 @@ os.chdir(dname+'\\..')
 sys.path.insert(0, os.getcwd())
 
 from src.abstract.DataLoader import DataLoader
-from src.strategy.DataStrategy import Polygoner, Punkter, MobilePlan
+from src.strategy.DataStrategy import *
 from src.abstract.TaskStrategy import TaskStrategy
-from src.strategy.TaskStrategy import ShortestPath
+from src.strategy.TaskStrategy import *
 
 import osmnx as ox
 import networkx as nx
@@ -400,17 +400,17 @@ if __name__ == '__main__':
     result_path = click.prompt("Sti til resultater", type=str, default='src\Resultater\\')
 
 
-    kvadratnet_handler = Polygoner(
-        path=data_path,
-        filename=kvadratnet_filename,
-        crs=crs
-    )
-    
-    #kvadratnet_handler = Punkter(
+    #kvadratnet_handler = Polygoner(
     #    path=data_path,
     #    filename=kvadratnet_filename,
     #    crs=crs
     #)
+    
+    kvadratnet_handler = Punkter(
+        path=data_path,
+        filename=kvadratnet_filename,
+        crs=crs
+    )
 
     stop_handler = MobilePlan(
         path=data_path,
@@ -422,7 +422,8 @@ if __name__ == '__main__':
         stander_nedlagt=stander_nedlagt
     )
     
-    task_strategy = ShortestPath()
+    #task_strategy = ShortestPath()
+    task_strategy = AllNearbyStops(max_distances=[10, 500])
 
 
     algorithm = PathAlgorithm(

@@ -20,14 +20,14 @@ class TestShortestPath(unittest.TestCase):
             'geometry': [None, None, None, None],
             'geometry_center': [None, None, None, None],
             'the_geom': [None, None, None, None],
-            'osmid': [100, 101, 102, 103],
+            'osmid': [2000, 2001, 2002, 2003],
             'iGraph_id': [0, 1, 2, 3],
             'dist_path': [100000, 100000, 100000, 9],  # nuværende fundet korteste distance
             'dist_input': [5, 10, 7, 2],  # distance fra centroid til nærmeste osmid
             'dist_stop': [100000, 100000, 100000, 2], # nuværende distance fra nærmeste stop til dets osmid
             'stop_name': [None, None, None, 'Stop E'], # nuværende nærmeste stop
             'stop_id': [None, None, None, 105],
-            'stop_osmid': [None, None, None, 1005],
+            'stop_osmid': [None, None, None, 2005],
             'stop_iGraph_id': [None, None, None, 50]
         }
         self.kvadratnet_gdf = gpd.GeoDataFrame(kvadratnet_data, crs='EPSG:25832').set_geometry('geometry_center')
@@ -145,11 +145,11 @@ class TestAllNearbyStops(unittest.TestCase):
             'id': [0, 1, 2, 3], # kvadratnet id
             'geometry': [None, None, None, None],
             'geometry_center': [None, None, None, None],
-            'osmid': [100, 101, 102, 103],
+            'osmid': [2000, 2001, 2002, 2003],
             'iGraph_id': [0, 1, 2, 3],
             'dist_input': [5, 10, 7, 2],  # distance fra centroid til nærmeste osmid
-            'stops_10': ['', '', '', 'Stop E'], # nuværende liste af stop indenfor 10m
-            'stops_20': ['', '', '', 'Stop E'] # nuværende liste af stop indenfor 20m
+            'stops_10': ['', '', '', '105'], # nuværende liste af stop indenfor 10m
+            'stops_20': ['', '', '', '105'] # nuværende liste af stop indenfor 20m
         }
         self.kvadratnet_gdf = gpd.GeoDataFrame(kvadratnet_data, crs='EPSG:25832').set_geometry('geometry_center')
 
@@ -219,12 +219,11 @@ class TestAllNearbyStops(unittest.TestCase):
             self.stop_nodes_ig
         )
         
-        expected_stop_names_10 = ['Stop C', '', 'Stop C;Stop D', 'Stop E;Stop A;Stop D']
-        expected_stop_names_20 = ['Stop A;Stop B;Stop C', '', 'Stop C;Stop D', 'Stop E;Stop A;Stop B;Stop C']
+        expected_stop_names_10 = ['103', '', '103;104', '105;101;104'] # 'Stop C', '', 'Stop C;Stop D', 'Stop E;Stop A;Stop D'
+        expected_stop_names_20 = ['101;102;103', '', '103;104', '105;101;102;104'] # 'Stop A;Stop B;Stop C', '', 'Stop C;Stop D', 'Stop E;Stop A;Stop B;Stop D'
         
         self.assertListEqual(updated_kvadratnet_gdf['stops_10'].tolist(), expected_stop_names_10)
         self.assertListEqual(updated_kvadratnet_gdf['stops_20'].tolist(), expected_stop_names_20)
-
 
 
 
