@@ -130,6 +130,7 @@ class AllNearbyStops(TaskStrategy):
                                       stop_nodes_ig):
         
         distances = np.array(distances)
+        stop_nodes_ig = np.array(stop_nodes_ig)
         
         # iterer igennem igraph listen af centroider
         for idx, centroid_node_ig in enumerate(centroid_nodes_ig):
