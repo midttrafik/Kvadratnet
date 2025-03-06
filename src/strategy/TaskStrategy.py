@@ -108,7 +108,6 @@ class ShortestPath(TaskStrategy):
 class AllNearbyStops(TaskStrategy):
     def __init__(self, max_distances) -> None:
         self.max_distances = max_distances
-        pass
     
     
     def prepare_input(self, 
@@ -157,8 +156,7 @@ class AllNearbyStops(TaskStrategy):
     
     
     def write_output(self, output, path, filename) -> None:
-        pass
-
+        output.to_csv(path + filename, sep=',', header=True)
 
     
     
