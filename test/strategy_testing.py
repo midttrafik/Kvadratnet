@@ -17,6 +17,7 @@ class TestShortestPath(unittest.TestCase):
         # Example centroid data
         kvadratnet_data = {
             'id': [0, 1, 2, 3],
+            'the_geom': [None, None, None, None],
             'osmid': [100, 101, 102, 103],
             'iGraph_id': [0, 1, 2, 3],
             'dist_path': [100000, 100000, 100000, 9],  # nuværende fundet korteste distance
@@ -71,6 +72,22 @@ class TestShortestPath(unittest.TestCase):
                 
         self.assertTrue(len(centroids) > 0)
         self.assertTrue(len(closest_stops) > 0)
+        
+    
+    # test om output kun indeholder de relevante kolonner
+    def test_prepare_output(self):
+        updated_kvadratnet_df = self.task_strategy.associate_centroids_and_stops(
+                                                              self.kvadratnet_df, 
+                                                              self.stop_gdf, 
+                                                              self.distances, 
+                                                              self.centroid_nodes_ig, 
+                                                              self.stop_nodes_ig)
+        
+        output = self.task_strategy.prepare_output(updated_kvadratnet_df)
+        
+        expected_columns = ['id', 'the_geom', 'osmid', 'dist_total', 'dist_path', 'dist_input', 'dist_stop', 'stop_name', 'stop_id', 'stop_osmid']
+        
+        self.assertCountEqual(output.columns, expected_columns)
 
 
     # test om navn på nærmeste stop tildeles korrekt til hvert kvadrat
@@ -84,7 +101,7 @@ class TestShortestPath(unittest.TestCase):
 
         expected_stop_names = ['Stop C', 'Stop B', 'Stop C', 'Stop E']
         
-        self.assertEqual(updated_kvadratnet_df['stop_name'].tolist(), expected_stop_names)
+        self.assertListEqual(updated_kvadratnet_df['stop_name'].tolist(), expected_stop_names)
     
     
     # test om distance fra stop til osm node tildeles korrekt til hvert kvadrat
@@ -98,7 +115,7 @@ class TestShortestPath(unittest.TestCase):
 
         expected_stop_dist = [2, 4, 2, 2]
         
-        self.assertEqual(updated_kvadratnet_df['dist_stop'].tolist(), expected_stop_dist)
+        self.assertListEqual(updated_kvadratnet_df['dist_stop'].tolist(), expected_stop_dist)
     
     
     # test om total distance udregnes korrekt for hvert kvadrat
@@ -113,7 +130,7 @@ class TestShortestPath(unittest.TestCase):
 
         expected_total_dist = [5+5+2, 10+30+4, 7+10+2, 2+9+2]
         
-        self.assertEqual(updated_kvadratnet_df['dist_total'].tolist(), expected_total_dist)
+        self.assertListEqual(updated_kvadratnet_df['dist_total'].tolist(), expected_total_dist)
 
 
 
@@ -124,6 +141,7 @@ class TestAllNearbyStops(unittest.TestCase):
             'id': [0, 1, 2, 3], # kvadratnet id
             'osmid': [100, 101, 102, 103],
             'iGraph_id': [0, 1, 2, 3],
+            'dist_input': [5, 10, 7, 2],  # distance fra centroid til nærmeste osmid
             'stops_10': ['', '', '', 'Stop E'], # nuværende liste af stop indenfor 10m
             'stops_20': ['', '', '', 'Stop E'] # nuværende liste af stop indenfor 20m
         }
@@ -172,6 +190,15 @@ class TestAllNearbyStops(unittest.TestCase):
                 
         self.assertTrue(len(centroids) == 0)
         self.assertTrue(len(closest_stops) == 0)
+    
+    
+    # test om output kun indeholder de relevante kolonner
+    def test_prepare_output(self):
+        output = self.task_strategy.prepare_output(self.kvadratnet_df)
+        
+        expected_columns = ['id', 'osmid', 'stops_10', 'stops_20']
+        
+        self.assertCountEqual(output.columns, expected_columns)
         
         
     # test om listen af stop udregnes korrekt for hvert kvadrat
@@ -187,8 +214,8 @@ class TestAllNearbyStops(unittest.TestCase):
         expected_stop_names_10 = ['Stop C', '', 'Stop C;Stop D', 'Stop E;Stop A;Stop D']
         expected_stop_names_20 = ['Stop A;Stop B;Stop C', '', 'Stop C;Stop D', 'Stop E;Stop A;Stop B;Stop C']
         
-        self.assertEqual(updated_kvadratnet_df['stops_10'].tolist(), expected_stop_names_10)
-        self.assertEqual(updated_kvadratnet_df['stops_20'].tolist(), expected_stop_names_20)
+        self.assertListEqual(updated_kvadratnet_df['stops_10'].tolist(), expected_stop_names_10)
+        self.assertListEqual(updated_kvadratnet_df['stops_20'].tolist(), expected_stop_names_20)
 
 
 

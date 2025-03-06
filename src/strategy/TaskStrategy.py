@@ -110,9 +110,15 @@ class AllNearbyStops(TaskStrategy):
         self.max_distances = max_distances
         pass
     
+    
     def prepare_input(self, 
                       input_gdf):
-        pass
+        
+        # tilføj en kolonne for hver distance.
+        # hver række i kolonnen vil indeholde en tekststreng hvor stop er ";"-separaret
+        for max_dist in self.max_distances:
+            input_gdf[f'stops_{max_dist}'] = ''
+            
         return input_gdf
     
     
@@ -136,7 +142,13 @@ class AllNearbyStops(TaskStrategy):
     
     def prepare_output(self,
                        kvadratnet_df):
-        output = None
+        
+        # behold kun relevant kolonner
+        output = kvadratnet_df[['id', 'osmid'] + [f'stops_{max_dist}' for max_dist in self.max_distances]]
+        
+        # formater datatyper og afrunding
+        output['osmid'] = output['osmid'].astype(str)
+        
         return output
     
     
