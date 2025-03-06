@@ -140,7 +140,7 @@ class AllNearbyStops(TaskStrategy):
     
     
     def get_output_suffix(self):
-        return None
+        return 'allnearbystops.csv'
     
     
     def write_output(self, output, path, filename) -> None:
