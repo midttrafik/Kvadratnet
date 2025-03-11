@@ -152,7 +152,12 @@ class AllNearbyStops(TaskStrategy):
                 else:
                     kvadratnet_df.loc[idx, f'stops_{max_dist}'] = old_nearby_stops + ';' + new_nearby_stops
         
+        # frigør memory
         del distances
+        
+        # fjern ; forfra og bagfra men behold dem som separerer stop numre
+        for max_dist in self.max_distances:
+            kvadratnet_df[f'stops_{max_dist}'] = kvadratnet_df[f'stops_{max_dist}'].str.strip(';')
         
         return kvadratnet_df
     
