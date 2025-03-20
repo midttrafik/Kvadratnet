@@ -88,7 +88,11 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
 * Lav eller opdater (tøm/tilføj) resultat tabel.
 * Refresh materialized view *_allnearbystops* eller lav nyt hvis datakilde har ændret sig (kopier det gamle og ændre *K24* og tabeller).
 * Anvendt farveskala:
-    * ...
+    * Meget høj, #FFE0E0 (afgange_døgn > 216 and bus > 0 and letbane_lokalbane > 0)
+    * Høj, #E59B97 (afgange_døgn > 216 and (bus=0 or letbane_lokalbane=0))
+    * Middel, #C2584D (96 <= afgange_døgn <= 216)
+    * Lav, #950000 (0 < afgange_døgn < 96)
+    * Ingen, #000000 (afgange_døgn = 0)
 
 ![screenshot](Ressourcer/Kvadratnet_allnearbystops.png)
 
