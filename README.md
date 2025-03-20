@@ -129,7 +129,7 @@ Programmets overordnet struktur:
     * Find nærmeste OSM knude til alle stop og gem distancen.
 2. Processering.
     * Find korteste distance fra hver stop knude til alle knuder på grafen.
-    * For hver punkt, tildel stop(s) efter methoden i TaskStrategy.
+    * For hver punkt, tildel stop(s) efter metoden i TaskStrategy.
 3. Postprocessering.
     * Hvis relevant, find stien på vejnettet mellem punkt og stop og gem som Linestring.
     * Skriv resultater med id fra input.
