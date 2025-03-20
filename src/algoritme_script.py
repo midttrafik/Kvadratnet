@@ -19,7 +19,6 @@ import numpy as np
 from time import time
 from shapely import Point
 from shapely.geometry import LineString
-import click
 
 
 class PathAlgorithm:
@@ -428,61 +427,3 @@ class PathAlgorithm:
 
         end = time()
         print(f'Resultat gemt som {output_filename} på {round(end-start, 2)} sekunder.')
-
-
-
-if __name__ == '__main__':
-    stop_filename = click.prompt("Navn på stopfil uden sti til mappe", type=str)
-    kvadratnet_filename = click.prompt("Navn på kvadratnetsfil uden sti til mappe", type=str)
-    osm_place = click.prompt("Navn på administrativt OSM område", type=str, default='Region Midtjylland')
-    flex = click.prompt("Fjern Flextur", type=bool, default=True)
-    plus = click.prompt("Fjern Plustur", type=bool, default=True)
-    stander_9 = click.prompt("Fjern 09 stander", type=bool, default=False)
-    stander_nedlagt = click.prompt("Fjern nedlagte standere", type=bool, default=True)
-    chunk_size = click.prompt("Chunk size", type=int, default=500)
-    minimum_components = click.prompt("Mindste antal knuder i et uforbundet komponent", type=int, default=200)
-    crs = click.prompt("CRS", type=str, default='EPSG:25832')
-    data_path = click.prompt("Sti til data", type=str, default='src\Data\\')
-    result_path = click.prompt("Sti til resultater", type=str, default='src\Resultater\\')
-
-
-    #kvadratnet_handler = Polygoner(
-    #    path=data_path,
-    #    filename=kvadratnet_filename,
-    #    crs=crs
-    #)
-    
-    kvadratnet_handler = Punkter(
-        path=data_path,
-        filename=kvadratnet_filename,
-        crs=crs
-    )
-
-    stop_handler = MobilePlan(
-        path=data_path,
-        filename=stop_filename,
-        crs=crs,
-        flex=flex,
-        plus=plus,
-        stander_9=stander_9,
-        stander_nedlagt=stander_nedlagt
-    )
-    
-    #task_strategy = ShortestPath()
-    task_strategy = AllNearbyStops(max_distances=[10, 500])
-
-
-    algorithm = PathAlgorithm(
-        kvadratnet_filename=kvadratnet_filename,
-        osm_place=osm_place,
-        chunk_size=chunk_size,
-        minimum_components=minimum_components,
-        crs=crs,
-        data_path=data_path,
-        result_path=result_path,
-        kvadratnet_loader=kvadratnet_handler,
-        stop_loader=stop_handler,
-        task_strategy=task_strategy
-    )
-
-    algorithm.compute(write_result=True)
