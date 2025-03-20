@@ -111,7 +111,7 @@ Python [OSMNX](https://osmnx.readthedocs.io/en/stable/) og [NetworkX](https://ne
 Python [igraph](https://github.com/igraph/python-igraph) (Python interface til C bibliotek) anvendes til højeffektive udregninger af grafteori bl.a. ved parallelisering på flere CPU-kerner. Beregninger i C er meget hurtigere end beregniner i Python, derfor anvendes igraph fremfor OSMNX. <br/>
 Koblingen mellem Python og igraph er lavet med inspiration i Notebook 14 fra [OSMNX Notebooks](https://github.com/gboeing/osmnx-examples)<br/>
 
-Algoritmen løser multi-source multi-target shortest path problemet ved brug af Dijkstras algoritme.</br>
+Algoritmen løser multi-source multi-target weighted shortest path problemet ved brug af Dijkstras algoritme.</br>
 Da flere forskellige opgaver forudsætter at følgende problem skal løses, anvender programmet et strategy pattern efter principperne i kompositionelt design. Med kompositionelt design kan vi meget nemt og effektivt genbruge source code og tilføje nye opgaver og nye måder at indlæse data. Opbygning og afhængigheder i strategy pattern kan ses i følgende UML diagram.</br>
 ![screenshot](Ressourcer/UML_diagram.png)
 
@@ -158,7 +158,7 @@ Forventet tidskompleksitet med Dijkstras Algoritme: $O_1 = O(|S| |T| (|V| + |E|)
 ### Algoritme 2: heuristik
 Find korteste vej fra hvert startpunkt $S_i$ til sættet af slutpunkter $K_i$ som er tættest på $S_i$ i fugleflugtsdistance, hvor sættet af slutpunkter altid har størrelsen $|K_i|$. $S_i \rightarrow T_j$ for $i=1, ..., |S|$ og $j \in K_i$. <br/>
 Præprocesseringen af fugleflugtdistancer koster $O(|S| |T|)$. <br/>
-Løsningen er en heuristik tilgang som ikke er garanteret at give en optimalløsning, f.eks. hvis et startpunkt er meget langt væk fra de nærmeste slutpunkter, kan det forventes at distancen i fugleflugt meget anderledes en distancen på vejnettet. <br/>
+Løsningen er en heuristik tilgang som ikke er garanteret at give en optimalløsning, f.eks. hvis et startpunkt er meget langt væk fra de nærmeste slutpunkter, kan det forventes at distancen i fugleflugt er meget anderledes end distancen på vejnettet. <br/>
 
 Antal gentagelser af korteste vej algoritmen: $|S| |K_i|$ <br/>
 Forventet tidskompleksitet med Dijkstras Algoritme: $O_2 = O(|S| |K_i| (|V| + |E|) \ln{(|V|)} + |S| |T|)$ <br/>
@@ -187,10 +187,11 @@ Befolkningskvadratnettet i Midtjylland har $|S| \approx 110000$ kvadrater, Midtt
 [Algoritme 4](#algoritme-4-optimal) er $\frac{O_3}{O_4} = 11$ gange hurtigere end [Algoritme 3](#algoritme-3-optimal). <br/>
 Det svarer til at [Algoritme 4](#algoritme-4-optimal) er 110000 gange hurtigere end brute-force metoden, [Algoritme 1](#algoritme-1-optimal). <br/>
 
-[Algoritme 4](#algoritme-4-optimal) tager på nuværende tidspunkt 20 minutter med igraph. <br/>
+[Algoritme 4](#algoritme-4-optimal) tager på nuværende tidspunkt 20 minutter med igraph (C). <br/>
 [Algoritme 3](#algoritme-3-optimal) forventes at tage 3.5 timer. <br/>
 [Algoritme 2](#algoritme-2-heuristik) forventes at tage 3 dage. <br/>
-[Algoritme 1](#algoritme-1-optimal) forventes at tage 4 år! <br/>
+[Algoritme 1](#algoritme-1-optimal) forventes at tage 4 år! Dog i praksis ville det nok tage nogle dage da den forventet tidskompleksitet af Dijkstra er lille da de fleste kvadrater har et stoppested indenfor nogle kilometre. <br/>
+Havde løsningen været med OSMNX (Python) viste mine oprindelige eksperimenter at det i praksis ville tage flere måneder med denne metode.
 
 <br/>
 <br/>

@@ -43,7 +43,7 @@ class PathAlgorithm:
                 - Alle kolonner oprettet af task_strategy (f.eks. navn og id på nærmeste stop eller id på alle stop indenfor 500m)
         
         Metode:
-            Problemet er multi-source multi-target directed shortest path som løses med Dijkstras algoritme ved brug af C biblioteket igraph.
+            Problemet er multi-source multi-target weighted shortest path som løses med Dijkstras algoritme ved brug af C biblioteket igraph.
             Problemet omformuleres til at finde korteste vej for alle targets (stops) til alle OSM knuder da dette kan klares i one-go og udnytter igraphs multiprocessing.
             På grund af praktiske memory begrænsninger anvendes chunkinization således kun en delmængde af targets anvendes af gangen.
         

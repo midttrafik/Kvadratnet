@@ -8,7 +8,7 @@ from src.strategy.DataStrategy import *
 from src.strategy.TaskStrategy import *
 
 import click
-    
+
 
 if __name__ == '__main__':
     task_type = click.prompt("Opgave type", type=click.Choice(['Nærmeste stop', 'Stop indenfor distance']))
