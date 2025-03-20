@@ -1,24 +1,37 @@
 # Formål
 
-Beregn distancen på OSM vej- og stinettet fra geometriske objekter (f.eks. befolkningskvadratnet, arbejdspladser, uddannelsesinstitutioner) til nærmeste stoppested.<br/>
-Området er som udgangspunkt Region Midtjylland, men ethvert administrativt område fra OpenStreetMap kan anvendes.<br/>
+Wffektivt udregner gå-afstand mellem alle objekter i to inputfiler på OpenStreetMaps vej- og stilag.</br>
+Udviklet med henblik på at regne afstande mellem stoppesteder og befolkningskvadratnet men kan anvendes med vilkårligt punktbaseret data.</br>
 
-Eksempler hvor metoden er brugt:
-* Grunddata/befolkningsdata
-* CVR/virksomheder
-* Uddannelsesinstitutioner/Uddannelsesinstitutioner med elevtal
+Eksempler på bruges:
+* Grunddata/befolkningsdata.
+    * Korteste vej til nærmeste stop fra hvert 100m*100m beboet område.
+    * Tælle antal unikke afgange indenfor 500m gå-afstand for hvert beboelseskvadrat.
+* CVR/virksomheder.
+    * Korteste vej til nærmeste stop fra hver virksomhed.
+* Uddannelsesinstitutioner/Uddannelsesinstitutioner med elevtal.
+    * Korteste vej til nærmeste stop fra hver uddannelsesinstitution.
 
+Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres da programmet er opbygget med kompositionelt design.
 <br/>
 <br/>
 
 
-# Data
+# Data strategier
 
-* Geometrisk inputfil som shapefil
-    - Skal indeholde en id kolonne og en geometrikolonne
-    - Kan f.eks. være Befolkningskvadratnet, Arbejdspladser, Udannelsesinstitutioner mv.
+* Input strategi:
+    * Indlæs fil og transformer den således at den som minimum har følgende kolonner:
+        * id: unikt id.
+        * geometry_center: punkt geometri.
+    * F.eks. Befolkningskvadratnet, Arbejdspladser, Udannelsesinstitutioner mv.
+* Stop strategi:
+    * Indlæs fil og transformer den således at den som minimum har følgende kolonner:
+        * geometry: punkt geometri.
+        * stop_code: unikt id.
+        * stop_name: stop navn, kan efterlades som None hvis ikke det er relevant.
+    * F.eks. csv udtræk fra MobilePlan.
 * Standerfil som CSV med UTM32N koordinater.
-    - Skal indeholde kolonnerne: UTM32_Easting, UTM32_Northing, Long name, Kode til stoppunkt og Pos.nr.
+    * Skal indeholde kolonnerne: UTM32_Easting, UTM32_Northing, Long name, Kode til stoppunkt og Pos.nr.
 * Dobbeltrettet OSM netværk af typen ”all” hentes automatisk. Inkluderer alle typer veje og stier indenfor det administrative område.
 
 <br/>
@@ -26,84 +39,67 @@ Eksempler hvor metoden er brugt:
 
 
 # Procedure
-
-## Opsætning af Data
-* Placer geometrisk inputfil (.shp) i mappen Data
-* Placer stoppestedsfil (.csv) i mappen Data
-* Åben *data_handler.py* i VSCode
-* Er geometrikolonnen i input understøttet af *select_method* dvs. af typen Polygon eller Point?
-    - Hvis ja, spring ned til Kørsel af Algoritme
-    - Ellers skrives en funktion som 
-        1. Læser dataen
-        2. Transformerer kolonnerne id og geometri til *id* og *geometry_center* med datatypen *Point*
-        3. Tilføj else if case til *select_method*
-
-<br/>
-
-## Kørsel af Algoritme
-* Åben *algoritme_script.py* i VSCode og kør. Intet skal ændres i denne fil!
-* Indtast inputs. Default værdi er angivet som [...].
-    - Konfigurationsmetoden til geometrien for input er påkrævet f.eks. ***Polygoner*** eller ***Punkter***
-    - Konfigurationsmetoden til geometrien for stop er påkrævet f.eks. ***MobilePlan***
-    - Filnavnet for standerfilen er påkrævet f.eks. ***MT_Stoppunkter_20241015.csv***
-    - Filnavnet for inputfil er påkrævet f.eks. ***befolkning_2024.shp***
-    - OSM område er som udgangspunkt ***Region Midtjylland*** men kan ændres til andre administrative områder f.eks. Aarhus Kommune
-    - Flextur, Plustur og nedlagte standere fjernes som udgangspunkt
-    - 09 Standere beholdes som udgangspunkt
-    - Stander chunk size kan sænkes fra 500 hvis memory er et problem
-    - Minimum Forbundende Komponenter default 200, alle uforbundende grafer med færre knuder fjernes automatisk. Bør kunne forøges til 1000 hvis mange inputs ikke kan tildeles et nærmeste stop, men forøges den for meget vil f.eks. Venø blive frasorteret.
-* Kør script (Kvadratnet tager cirka 120 minutter)
-    - Cirka 10 minutter for indlæsning af data
-    - Cirka 35 minutter for Dijkstra's Algoritme
-    - Cirka 45 miutter for at hente geometrien for korteste vej for hvert input
-        - OBS! Det er helt fint at "RuntimeWarning: Couldn't reach some vertices." forekommer da det f.eks. skyldes beboelse på ikke-brofaste øer.
-    - Cirka 30 minutter for at skrive shapefil
-* Output ligger i mappen Resultater
-* Webgis
-    - Indlæs resultatet ved tøm/tilføj tabel
-    - Refresh 2*mvw med endelsen \_distance og \_line
-    - Farveskala
-        - 0-250m, #FFF5F0
-        - 250-500m, #FEE0D2
-        - 500-750m, #FCBBA1
-        - 750-1000m, #FC9272
-        - 1000-1250m, #FB6A4A
-        - 1250-1500m, #EF3B2C
-        - 1500-1750m, #CB181D
-        - 1750-2000m, #99000D
-        - 2000-5000m, #6B031A
-        - 5000m+, #000000
-    - Punkter/polygoner
-        - Farve fra farveskala, størrelse skal være konstant eller kvantitativ mellem 5-15, opacity=75
-    - Linjer
-        - Sort, tykkelse=3, opacity=100
-        - Farve fra farveskala, tykkelse=2, opacity=100
+* Placer data i mappen *src/Data*.
+* Åben og kør *run.py*.
+* Indtast inputs. Valgmuligheder er (...) og default værdi er [...].
+    * Vælg de rigtige input data, stop data og opgave strategier.
+    * Ethvert administrative OSM område kan anvendes.
+    * Flextur, Plustur og nedlagte standere filtreres som default fra.
+    * 09 Standere beholdes som default.
+    * Stander chunk size kan er default 500, hvis der er problemer med *out of memory*, kan den sænkes mod at programmet bliver lidt langsomere.
+    * Mindste antal OSM knuder i uforbundende komponenter er default 200. Kan forøges hvis der er mange tilfælde hvor der ikke findes en vej. Et uforbundet komponent er en subgraf som ikke hænger sammen med hovedgrafen, f.eks. en ikke-brofast Ø eller en gangsti på taget af et museum.
+* Vent på at programmet er færdigt. Undgå andre CPU og memory krævende opgaver i mellemtiden.
+    * Det er OK hvis "RuntimeWarning: Couldn't reach some vertices." forekommer. Skyldes ofte at OSM knuden er en del af en uforbundet komponent.
+    * Befolkningskvadratnet i Region Midtjylland tager ca. 120 minutter.
+        * Ca. 10 minutter for indlæsning af data.
+        * Ca. 35 minutter for Dijkstra's Algoritme.
+        * Ca. 45 miutter for at hente geometrien for korteste vej for hvert input.
+        * Cirka 30 minutter for at skrive shapefil.
+* Output ligger i mappen Resultater.
+* Gå til Webgis afsnit.
 
 <br/>
 
-## Resultat
-Resultatet indeholder:
-    * (id) Id fra input
-    * (the_geom) Linestring med korteste vej på vejnettet
-    * (stop_id) id på nærmeste stop
-    * (stop_name) navn på nærmeste stop
-    * (dist\_total) Den totale distance mellem centroiden af kvadratet og gps punkt for nærmeste stander (summen af de tre næste distancer)
-    * (dist\_input) Distance fra input til nærmeste OSM knude
-    * (dist\_stop) Distance fra standerens gps punkt til nærmeste OSM knude
-    * (dist\_path) Distance mellem inputtets OSM knude og standerens OSM knude
+## Webgis: Nærmeste stop
+* Sørg for at original datakilde er i Webgis.
+* Lav eller opdater (tøm/tilføj) resultat tabel.
+* Refresh materialized views *_shortestpath* og *_shortestpath_line* eller lav nye hvis datakilde har ændret sig (kopier de gamle og ændre tabeller).
+* Anvendt farveskala:
+    - 0-250m, #FFF5F0
+    - 250-500m, #FEE0D2
+    - 500-750m, #FCBBA1
+    - 750-1000m, #FC9272
+    - 1000-1250m, #FB6A4A
+    - 1250-1500m, #EF3B2C
+    - 1500-1750m, #CB181D
+    - 1750-2000m, #99000D
+    - 2000-5000m, #6B031A
+    - 5000m+, #000000
 
-![screenshot](Ressourcer/Resultat_kvadratnet.png)
+![screenshot](Ressourcer/Kvadratnet_neareststops.png)
 
-![screenshot](Ressourcer/Resultat_kvadratnet_stier.png)
+![screenshot](Ressourcer/Kvadratnet_neareststops_line.png)
+
+</br>
+
+
+## Webgis: Stop indenfor distance
+* Sørg for at original datakilde er i Webgis.
+* Lav eller opdater (tøm/tilføj) resultat tabel.
+* Refresh materialized view *_allnearbystops* eller lav nyt hvis datakilde har ændret sig (kopier det gamle og ændre *K24* og tabeller).
+* Anvendt farveskala:
+    * ...
+
+![screenshot](Ressourcer/Kvadratnet_allnearbystops.png)
 
 <br/>
 
-**_Vigtigt:_**<br/>
-Alle beregningerne indeholder en usikkerhed da geometriske punkter og standere tildeles OSM knuder.<br/>
-Vej- og stinettet fra OpenStreetMap er en graf som består af et sæt knuder og kanter.<br/>
-Selvom Region Midtjylland har 400000 knuder, findes der ikke én knude som er præcist placeret ved det geometriske punkt.<br/>
+
+## Vigtigt
+Alle beregningerne indeholder en usikkerhed da punkter og standere tildeles den nærmeste OSM knude på OSM grafen.<br/>
+Selvom Region Midtjylland har 400000 knuder, findes der ikke én knude som er præcist placeret ved punktet.<br/>
 I enkelte tilfælde betyder det at et kvadrat har en højere distance sammenlignet med nabokvadraterne, hvis den nærmeste OSM knude er langt væk.<br/>
-![screenshot](Ressourcer/Kvadrat_usikkerhed.png)
+![screenshot](Ressourcer/Kvadratnet_usikkerhed.png)
 
 <br/>
 <br/>
@@ -115,26 +111,28 @@ Python [OSMNX](https://osmnx.readthedocs.io/en/stable/) og [NetworkX](https://ne
 Python [igraph](https://github.com/igraph/python-igraph) (Python interface til C bibliotek) anvendes til højeffektive udregninger af grafteori bl.a. ved parallelisering på flere CPU-kerner. Beregninger i C er meget hurtigere end beregniner i Python, derfor anvendes igraph fremfor OSMNX. <br/>
 Koblingen mellem Python og igraph er lavet med inspiration i Notebook 14 fra [OSMNX Notebooks](https://github.com/gboeing/osmnx-examples)<br/>
 
-Kerne-algoritmen udregner korteste distance fra et punkt i inputfilen til nærmeste punkt i hjælpefilen.<br/>
+Algoritmen løser multi-source multi-target shortest path problemet ved brug af Dijkstras algoritme.</br>
+Da flere forskellige opgaver forudsætter at følgende problem skal løses, anvender programmet et strategy pattern efter principperne i kompositionelt design. Med kompositionelt design kan vi meget nemt og effektivt genbruge source code og tilføje nye opgaver og nye måder at indlæse data. Opbygning og afhængigheder i strategy pattern kan ses i følgende UML diagram.</br>
+![screenshot](Ressourcer/UML_diagram.png)
+
 
 Programmets overordnet struktur:
-1. Præprocessering
-    * Indlæs geometrisk inputfil
-    * Indlæs standere og anvend filtre
-    * Fjern standere som befinder sig udenfor det administrative område
-    * Hent OSM netværk med OSMNX
-    * Fjern uforbundende komponenter fra OSM
-    * Omdan OSM netværket til en igraph graf hvor kanter er vægtet med kantlængde i meter
-    * Gem en mapping af igraph id til osmid og en mapping af osmid til igraph id
-    * Find nærmeste OSM knude til alle geometriske punkter og gem distancen
-    * Find nærmeste OSM knude til alle stop og gem distancen
-    * Oversæt OSM knuder til igraph nodes
-2. Processering
-    * Find korteste distance fra hver stop knude til alle knuder på grafen
-    * For hver geometrisk punkts knude, find det stop med kortest distance
-3. Postprocessering
-    * Find stien på vejnettet mellem input og nærmeste stop og gem som Linestring
-    * Gem fil nærmeste stop og stien på vejnettet
+1. Præprocessering.
+    * Indlæs input fil med DataStrategy.
+    * Indlæs stop fil med DataStrategy.
+    * Fjern standere som befinder sig udenfor det administrative OSM område.
+    * Hent OSM netværk med OSMNX.
+    * Fjern uforbundende komponenter fra OSM.
+    * Omdan OSM netværket til en igraph graf hvor kanter er vægtet med kantlængde i meter.
+    * Gem en mapping af igraph id til osmid og en mapping af osmid til igraph id.
+    * Find nærmeste OSM knude til alle punkter og gem distancen.
+    * Find nærmeste OSM knude til alle stop og gem distancen.
+2. Processering.
+    * Find korteste distance fra hver stop knude til alle knuder på grafen.
+    * For hver punkt, tildel stop(s) efter methoden i TaskStrategy.
+3. Postprocessering.
+    * Hvis relevant, find stien på vejnettet mellem punkt og stop og gem som Linestring.
+    * Skriv resultater med id fra input.
 
 <br/>
 <br/>
@@ -199,7 +197,5 @@ Det svarer til at [Algoritme 4](#algoritme-4-optimal) er 110000 gange hurtigere 
 
 
 # Backlog
+* Skrivning af shapefil fra geopandas er langsom for store filer.
 
-* Kun distancen til stoppesteder er understøttet på nuværende tidspunkt
-* For nogle få objekter kan der ikke findes en vej til et stoppested. Skyldes muligvis at det nærmeste OSM id befinder sig i en uforbundet graf med flere end Minimum Forbundende Komponenter (default 200) antal knuder.
-* Skrivning af shapefil fra geopandas er langsom for store datamængder
