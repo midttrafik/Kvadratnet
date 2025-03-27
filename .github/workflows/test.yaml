@@ -30,13 +30,6 @@ jobs:
       - name: Run tests with coverage
         run: |
           cd test
-          coverage run -m unittest strategy_testing
-          coverage html
-          coverage report -m
-
-      - name: Upload coverage report as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: htmlcov
-          retention-days: 7
+          python -m coverage run -m unittest strategy_testing
+          python -m coverage report
+          python -m coverage html

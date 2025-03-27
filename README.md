@@ -46,10 +46,10 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
     * Ethvert administrative OSM område kan anvendes.
     * Flextur, Plustur og nedlagte standere filtreres som default fra.
     * 09 Standere beholdes som default.
-    * Stander chunk size kan er default 500, hvis der er problemer med *out of memory*, kan den sænkes mod at programmet bliver lidt langsomere.
+    * Stander chunk size er default 500, hvis der er problemer med *out of memory*, kan den sænkes mod at programmet bliver lidt langsomere.
     * Mindste antal OSM knuder i uforbundende komponenter er default 200. Kan forøges hvis der er mange tilfælde hvor der ikke findes en vej. Et uforbundet komponent er en subgraf som ikke hænger sammen med hovedgrafen, f.eks. en ikke-brofast Ø eller en gangsti på taget af et museum.
 * Vent på at programmet er færdigt. Undgå andre CPU og memory krævende opgaver i mellemtiden.
-    * Det er OK hvis "RuntimeWarning: Couldn't reach some vertices." forekommer. Skyldes ofte at OSM knuden er en del af en uforbundet komponent.
+    * Det er OK hvis "RuntimeWarning: Couldn't reach some vertices." forekommer. Skyldes at den ene OSM knude er del af en uforbundet komponent så der ikke findes en sti til den anden OSM knude.
     * Befolkningskvadratnet i Region Midtjylland tager ca. 120 minutter.
         * Ca. 10 minutter for indlæsning af data.
         * Ca. 35 minutter for Dijkstra's Algoritme.
@@ -110,6 +110,14 @@ I enkelte tilfælde betyder det at et kvadrat har en højere distance sammenlign
 
 
 # Dokumentation af løsning
+
+Kør følgende for test og code coverage report. Derefter åben test/htmlcov/index.html.
+```console
+cd test
+python -m coverage run -m unittest strategy_testing
+python -m coverage report
+python -m coverage html
+```
 
 Python [OSMNX](https://osmnx.readthedocs.io/en/stable/) og [NetworkX](https://networkx.org/) til at håndtere OSM grafen.<br/>
 Python [igraph](https://github.com/igraph/python-igraph) (Python interface til C bibliotek) anvendes til højeffektive udregninger af grafteori bl.a. ved parallelisering på flere CPU-kerner. Beregninger i C er meget hurtigere end beregniner i Python, derfor anvendes igraph fremfor OSMNX. <br/>
