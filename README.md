@@ -1,6 +1,6 @@
 # Formål
 
-Wffektivt udregner gå-afstand mellem alle objekter i to inputfiler på OpenStreetMaps vej- og stilag.</br>
+Effektivt udregner gå-afstand mellem alle objekter i to inputfiler på OpenStreetMaps vej- og stilag.</br>
 Udviklet med henblik på at regne afstande mellem stoppesteder og befolkningskvadratnet men kan anvendes med vilkårligt punktbaseret data.</br>
 
 Eksempler på bruges:
@@ -39,8 +39,9 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
 
 
 # Procedure
-* Placer data i mappen *src/Data*.
-* Åben og kør *run.py*.
+* Første gang køres setup.py. Efterfølgende springes dette trin over.
+* Placer data i mappen **src/Data**.
+* Åben og kør **run.py**.
 * Indtast inputs. Valgmuligheder er (...) og default værdi er [...].
     * Vælg de rigtige input data, stop data og opgave strategier.
     * Ethvert administrative OSM område kan anvendes.
@@ -55,7 +56,7 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
         * Ca. 35 minutter for Dijkstra's Algoritme.
         * Ca. 45 miutter for at hente geometrien for korteste vej for hvert input.
         * Cirka 30 minutter for at skrive shapefil.
-* Output ligger i mappen Resultater.
+* Output ligger i **src/Resultater**.
 * Gå til Webgis afsnit.
 
 <br/>
