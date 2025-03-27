@@ -29,7 +29,8 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          coverage run -m unittest test.strategy_testing
+          cd test
+          coverage run -m unittest strategy_testing
           coverage html
           coverage report -m
 
