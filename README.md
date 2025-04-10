@@ -133,7 +133,7 @@ Programmets overordnet struktur:
 1. Præprocessering.
     * Indlæs input fil med DataStrategy.
     * Indlæs stop fil med DataStrategy.
-    * Fjern standere som befinder sig udenfor det administrative OSM område.
+    * Hent polygon for det administrative OSM område og fjern kvadrater og stop som befinder sig udenfor.
     * Hent OSM netværk med OSMNX.
     * Fjern uforbundende komponenter fra OSM.
     * Omdan OSM netværket til en igraph graf hvor kanter er vægtet med kantlængde i meter.

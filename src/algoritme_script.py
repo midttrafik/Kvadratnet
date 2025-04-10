@@ -328,8 +328,14 @@ class PathAlgorithm:
         stop_gdf = stop_gdf.reset_index(drop=True)
         
 
-        # hent OSM polygon og fjern stop udenfor polygon
+        # hent OSM polygon
         polygon = self.get_OSM_polygon(self.osm_place, self.crs)
+        
+        # fjern kvadrater udenfor OSM polygon
+        kvadratnet = self.remove_objects_outside_polygon(kvadratnet, polygon, geom_col='geometry_center')
+        print(f'Fjernet kvadrater udenfor {self.osm_place}, antallet af kvadrater er nu {kvadratnet.shape[0]}')
+        
+        # fjern stop udenfor OSM polygon
         stop_gdf = self.remove_objects_outside_polygon(stop_gdf, polygon, geom_col='geometry')
         print(f'Fjernet stop udenfor {self.osm_place}, antallet af stop er nu {stop_gdf.shape[0]}')
 
