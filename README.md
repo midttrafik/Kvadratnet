@@ -29,9 +29,9 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
         * geometry: punkt geometri.
         * stop_code: unikt id.
         * stop_name: stop navn, kan efterlades som None hvis ikke det er relevant.
-    * F.eks. csv udtræk fra MobilePlan.
-* Standerfil som CSV med UTM32N koordinater.
-    * Skal indeholde kolonnerne: UTM32_Easting, UTM32_Northing, Long name, Kode til stoppunkt og Pos.nr.
+    * Filtyper:
+        * MobilePlan csv fil med kolonnerne: UTM32_Easting, UTM32_Northing, Long name, Kode til stoppunkt og Pos.nr.
+        * Shapefil med stopnummer, stopnavn og geometri.
 * Dobbeltrettet OSM netværk af typen ”all” hentes automatisk. Inkluderer alle typer veje og stier indenfor det administrative område.
 
 <br/>
@@ -43,10 +43,10 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
 * Placer data i mappen **src/Data**.
 * Åben og kør **run.py**.
 * Indtast inputs. Valgmuligheder er (...) og default værdi er [...].
-    * Vælg de rigtige input data, stop data og opgave strategier.
     * Ethvert administrative OSM område kan anvendes.
-    * Flextur, Plustur og nedlagte standere filtreres som default fra.
-    * 09 Standere beholdes som default.
+    * Vælg opgave, input data og stop data.
+    * Angiv filtre: Flextur, Plustur og nedlagte standere filtreres som default fra og 09 standere beholdes som default.
+    * Hvis stopfil er shapefil så angiv navne på kolonner som indeholder stopnummer, stopnavn og geometri.
     * Stander chunk size er default 500, hvis der er problemer med *out of memory*, kan den sænkes mod at programmet bliver lidt langsomere.
     * Mindste antal OSM knuder i uforbundende komponenter er default 200. Kan forøges hvis der er mange tilfælde hvor der ikke findes en vej. Et uforbundet komponent er en subgraf som ikke hænger sammen med hovedgrafen, f.eks. en ikke-brofast Ø eller en gangsti på taget af et museum.
 * Vent på at programmet er færdigt. Undgå andre CPU og memory krævende opgaver i mellemtiden.

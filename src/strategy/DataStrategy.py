@@ -101,3 +101,59 @@ class MobilePlan(DataLoader):
         return stop_gdf
 
 
+class StopShapefile(DataLoader):
+    def __init__(self, 
+                 path: str, 
+                 filename: str, 
+                 crs: str,
+                 flex: bool, 
+                 plus: bool, 
+                 stander_9: bool, 
+                 stander_nedlagt: bool,
+                 stop_code_col: str,
+                 stop_name_col: str,
+                 stop_geometry_col: str) -> None:
+        self.path = path
+        self.filename = filename
+        self.crs = crs
+        self.flex = flex
+        self.plus = plus
+        self.stander_9 = stander_9
+        self.stander_nedlagt = stander_nedlagt
+        self.stop_code_col = stop_code_col
+        self.stop_name_col = stop_name_col
+        self.stop_geometry_col = stop_geometry_col
+        
+    def get_data(self) -> pd.DataFrame:
+        # indlæs stop shapefil
+        stop_gdf = gpd.read_file(self.path + self.filename)
+        
+        # ændre geometri til angivet crs hvis ikke den er tom eller har det i forvejen
+        if stop_gdf.crs is None:
+            assert 'Stopfil mangler CRS f.eks. EPSG:25832'
+        elif stop_gdf.crs.name != self.crs:
+            stop_gdf.to_crs(crs=self.crs, inplace=True)
+        
+        # tjek at angivne kolonner er korrekte
+        assert self.stop_code_col in stop_gdf.columns, f'Kolonnen {self.stop_code_col} findes ikke i {self.filename}'
+        assert self.stop_name_col in stop_gdf.columns, f'Kolonnen {self.stop_name_col} findes ikke i {self.filename}'
+        assert self.stop_geometry_col == stop_gdf.geometry.name, f'Kolonnen {self.stop_geometry_col} findes ikke i {self.filename}'
+        
+        # standardiser navne og opdater geometrikolonne til det nye navn
+        stop_gdf = stop_gdf.rename(columns={self.stop_code_col: 'stop_code',
+                                            self.stop_name_col: 'stop_name',
+                                            self.stop_geometry_col: 'geometry'})
+        stop_gdf.set_geometry('geometry', inplace=True)
+        
+        # behold kun relevante kolonner og udfør filtre
+        stop_gdf = stop_gdf[['stop_code', 'stop_name', 'geometry']]
+        if self.stander_9:
+            stop_gdf = stop_gdf[stop_gdf['stop_code'] % 10 != 9]
+        if self.flex:
+            stop_gdf = stop_gdf[stop_gdf['stop_name'].str.contains('knudepunkt', case=False)==False]
+        if self.plus:
+            stop_gdf = stop_gdf[stop_gdf['stop_name'].str.contains('plustur', case=False)==False]
+        if self.stander_nedlagt:
+            stop_gdf = stop_gdf[stop_gdf['stop_name'].str.contains('nedlagt|nedlag|nedelagt', case=False)==False]
+            
+        return stop_gdf
