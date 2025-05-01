@@ -41,7 +41,7 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
 # Procedure
 * Første gang køres setup.py. Efterfølgende springes dette trin over.
 * Placer data i mappen **src/Data**.
-    * Bemærk stoppestedsgeometrier skal være af typen Point da hvert individuelle stoppested skal være tilstede. MultiPoint kam laves til Point med multipart til singlepart.
+    * Bemærk Multipoint geometri understøttes ikke. MultiPoint kam laves til Point med multipart til singlepart.
 * Åben og kør **run.py**.
 * Indtast inputs. Valgmuligheder er (...) og default værdi er [...].
     * Ethvert administrative OSM område kan anvendes.
