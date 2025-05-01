@@ -28,10 +28,10 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
     * Indlæs fil og transformer den således at den som minimum har følgende kolonner:
         * geometry: punkt geometri.
         * stop_code: unikt id.
-        * stop_name: stop navn, kan efterlades som None hvis ikke det er relevant.
+        * stop_name: stop navn, værdier kan efterlades som None hvis ikke det er relevant.
     * Filtyper:
         * MobilePlan csv fil med kolonnerne: UTM32_Easting, UTM32_Northing, Long name, Kode til stoppunkt og Pos.nr.
-        * Shapefil med stopnummer, stopnavn og geometri.
+        * Shapefil med stopnummer, stopnavn og geometri. Kolonnenavne kan være vilkårlige så programmet spørger efter deres navne.
 * Dobbeltrettet OSM netværk af typen ”all” hentes automatisk. Inkluderer alle typer veje og stier indenfor det administrative område.
 
 <br/>
@@ -41,6 +41,7 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
 # Procedure
 * Første gang køres setup.py. Efterfølgende springes dette trin over.
 * Placer data i mappen **src/Data**.
+    * Bemærk stoppestedsgeometrier skal være af typen Point da hvert individuelle stoppested skal være tilstede. MultiPoint kam laves til Point med multipart til singlepart.
 * Åben og kør **run.py**.
 * Indtast inputs. Valgmuligheder er (...) og default værdi er [...].
     * Ethvert administrative OSM område kan anvendes.
