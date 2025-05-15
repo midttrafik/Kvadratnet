@@ -54,7 +54,7 @@ if __name__ == '__main__':
     print("Indtast information om stop.")
     stop_type = click.prompt("Indlæsning af stop", type=click.Choice(['MobilePlan', 'Shapefil']))
     stop_filename = click.prompt("Navn på stopfil uden sti til mappe", type=str)
-    flex = click.prompt("Fjern Flextur", type=bool, default=True)
+    flex = click.prompt("Fjern Flextur", type=bool, default=False)
     plus = click.prompt("Fjern Plustur", type=bool, default=True)
     stander_9 = click.prompt("Fjern 09 stander", type=bool, default=False)
     stander_nedlagt = click.prompt("Fjern nedlagte standere", type=bool, default=True)

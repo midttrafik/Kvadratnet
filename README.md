@@ -40,6 +40,7 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
 
 # Procedure
 * Første gang køres setup.py. Efterfølgende springes dette trin over.
+* Hent aktuelle stoppesteder med flextur knudepunkter ved brug af **SQL/aktuelle_stop.sql** gennem QGIS og download som shapefil.
 * Placer data i mappen **src/Data**.
     * Bemærk Multipoint geometri understøttes ikke. MultiPoint kam laves til Point med multipart til singlepart.
 * Åben og kør **run.py**.
