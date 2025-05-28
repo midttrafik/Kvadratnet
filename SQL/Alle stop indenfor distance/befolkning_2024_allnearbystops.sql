@@ -37,6 +37,7 @@ AS
 		WHERE ns.navn !~~ 'NEDLAGT%'::text AND n.importid = drift.importid_kpl('K24')
 	), 
 
+	-- lav række for hvert par af stander, itcs nr.
 	stander_itcs AS MATERIALIZED (
 		SELECT d.dag AS ugedag,
 			   d.tidsinterval,
@@ -58,23 +59,40 @@ AS
 		 AND vjt.trafikart <> 'Dublering'::text
 	),
 
+	-- Lav stop kolonner om til rækker
 	unionized AS MATERIALIZED (
-		SELECT befolkning_2024_allnearbystops.id,
-			   250 AS distance,
-			   befolkning_2024_allnearbystops.stops_250 AS stander_list
+		SELECT id,
+			   400 AS distance,
+			   stops_400 AS stander_list
 		FROM grunddata.befolkning_2024_allnearbystops
 		UNION ALL
-		SELECT befolkning_2024_allnearbystops.id,
+		SELECT id,
 			   500 AS distance,
-			   befolkning_2024_allnearbystops.stops_500 AS stander_list
+			   stops_500 AS stander_list
 		FROM grunddata.befolkning_2024_allnearbystops
 		UNION ALL
-		SELECT befolkning_2024_allnearbystops.id,
+		SELECT id,
+			   600 AS distance,
+			   stops_600 AS stander_list
+		FROM grunddata.befolkning_2024_allnearbystops
+		UNION ALL
+		SELECT id,
+			   800 AS distance,
+			   stops_800 AS stander_list
+		FROM grunddata.befolkning_2024_allnearbystops
+		UNION ALL
+		SELECT id,
 			   1000 AS distance,
-			   befolkning_2024_allnearbystops.stops_1000 AS stander_list
+			   stops_1000 AS stander_list
+		FROM grunddata.befolkning_2024_allnearbystops
+		UNION ALL
+		SELECT id,
+			   2000 AS distance,
+			   stops_2000 AS stander_list
 		FROM grunddata.befolkning_2024_allnearbystops
 	), 
 
+	-- cross join med alle typer ugedage og tidsintervaller således at også tidspunkter med 0 afgange er inkluderet
 	crossed AS MATERIALIZED (
 		SELECT unionized.id,
 			   unionized.distance,
@@ -85,8 +103,9 @@ AS
 		CROSS JOIN ( VALUES ('Hverdag', 'Døgn'), ('Lørdag', 'Døgn'), ('Søndag', 'Døgn')) d(ugedag, tidsinterval)
 	),
 
+	-- split semikolon separeret liste af standere til en række per stander
 	unnested AS MATERIALIZED (
-		SELECT crossed.id,
+		SELECT DISTINCT crossed.id,
 			   crossed.distance,
 			   crossed.ugedag,
 			   crossed.tidsinterval,
@@ -94,6 +113,10 @@ AS
 		FROM crossed
 	)
 
+	-- join standere på befolkningskvadratet
+	-- join aktuelle standere på så vi ved hvilken type stander det er
+	-- join itcs på standere
+	-- tæl antal unikke itcs per kvadrat = antal unikke afgange indenfor x meter og find standertyperne 
 	SELECT row_number() OVER () AS gid,
 		   b.id,
 		   b.antal_tal,
@@ -107,11 +130,11 @@ AS
 		   STRING_AGG(DISTINCT s.standertype::text, ', ') AS "standertyper",
 		   COUNT(DISTINCT si.itcs) AS "afgange_døgn",
 		   FLOOR(COUNT(DISTINCT si.itcs)::numeric / 24.0) AS "afgange_time",
-		   COALESCE(BOOL_OR(s.standertype = 'Bus'), FALSE) AS adgang_bus,
-		   COALESCE(BOOL_OR(s.standertype = 'Tog'), FALSE) AS adgang_tog,
-		   COALESCE(BOOL_OR(s.standertype = 'Letbane'), FALSE) AS adgang_letbane,
-		   COALESCE(BOOL_OR(s.standertype = 'Flextur'), FALSE) AS adgang_flextur,
-		   COALESCE(BOOL_OR(s.standertype = 'Plustur'), FALSE) AS adgang_plustur
+		   COALESCE(BOOL_OR(s.standertype = 'Bus'), FALSE) AS "adgang_bus",
+		   COALESCE(BOOL_OR(s.standertype = 'Tog'), FALSE) AS "adgang_tog",
+		   COALESCE(BOOL_OR(s.standertype = 'Letbane'), FALSE) AS "adgang_letbane",
+		   COALESCE(BOOL_OR(s.standertype = 'Flextur'), FALSE) AS "adgang_flextur",
+		   COALESCE(BOOL_OR(s.standertype = 'Plustur'), FALSE) AS "adgang_plustur"
 	FROM grunddata.befolkning_2024 b
 	LEFT JOIN unnested u ON b.id = u.id
 	LEFT JOIN aktuelle_standere s ON u.standernummer = s.standernummer
@@ -124,7 +147,7 @@ ALTER TABLE IF EXISTS grunddata.mvw_befolkning_2024_allnearbystops
     OWNER TO midttrafik;
 
 COMMENT ON MATERIALIZED VIEW grunddata.mvw_befolkning_2024_allnearbystops
-    IS 'Bruges til laget: befolkning_2024. Viser serviceniveau (antal afgange) for hvert befolkningskvadrat.';
+    IS 'Viser antal afgange og typer af tilgængelig offentlig transport indenfor x meter for hvert befolkningskvadrat. Inkluderer afgange for bus, flexbus, letbane og lokalbane. Inkluderer ikke afgange for tog.';
 
 CREATE INDEX idx_mvw_befolkning_2024_allnearbystops_the_geom
     ON grunddata.mvw_befolkning_2024_allnearbystops USING gist

@@ -3,7 +3,7 @@
 Effektivt udregner gå-afstand mellem alle objekter i to inputfiler på OpenStreetMaps vej- og stilag.</br>
 Udviklet med henblik på at regne afstande mellem stoppesteder og befolkningskvadratnet men kan anvendes med vilkårligt punktbaseret data.</br>
 
-Eksempler på bruges:
+Eksempler på brug:
 * Grunddata/befolkningsdata.
     * Korteste vej til nærmeste stop fra hvert 100m*100m beboet område.
     * Tælle antal unikke afgange indenfor 500m gå-afstand for hvert beboelseskvadrat.
@@ -47,15 +47,17 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
 * Indtast inputs. Valgmuligheder er (...) og default værdi er [...].
     * Ethvert administrative OSM område kan anvendes.
     * Vælg opgave, input data og stop data.
-    * Angiv filtre: Flextur, Plustur og nedlagte standere filtreres som default fra og 09 standere beholdes som default.
+    * Angiv filtre: 
+        * Flextur og 09 standere beholds som default.
+        * Plustur og nedlagte standere filtreres fra som default.
     * Hvis stopfil er shapefil så angiv navne på kolonner som indeholder stopnummer, stopnavn og geometri.
     * Stander chunk size er default 500, hvis der er problemer med *out of memory*, kan den sænkes mod at programmet bliver lidt langsomere.
     * Mindste antal OSM knuder i uforbundende komponenter er default 200. Kan forøges hvis der er mange tilfælde hvor der ikke findes en vej. Et uforbundet komponent er en subgraf som ikke hænger sammen med hovedgrafen, f.eks. en ikke-brofast Ø eller en gangsti på taget af et museum.
 * Vent på at programmet er færdigt. Undgå andre CPU og memory krævende opgaver i mellemtiden.
     * Det er OK hvis "RuntimeWarning: Couldn't reach some vertices." forekommer. Skyldes at den ene OSM knude er del af en uforbundet komponent så der ikke findes en sti til den anden OSM knude.
     * Befolkningskvadratnet i Region Midtjylland tager ca. 120 minutter.
-        * Ca. 10 minutter for indlæsning af data.
-        * Ca. 35 minutter for Dijkstra's Algoritme.
+        * Ca. 20 minutter for indlæsning af data.
+        * Ca. 30 minutter for Dijkstra's Algoritme.
         * Ca. 45 miutter for at hente geometrien for korteste vej for hvert input.
         * Cirka 30 minutter for at skrive shapefil.
 * Output ligger i **src/Resultater**.
@@ -86,15 +88,16 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
 </br>
 
 
-## Webgis: Stop indenfor distance
+## Webgis: Stop indenfor distance (analyse af serviceniveau)
 * Sørg for at original datakilde er i Webgis.
 * Lav eller opdater (tøm/tilføj) resultat tabel.
-* Refresh materialized view *_allnearbystops* eller lav nyt hvis datakilde har ændret sig (kopier det gamle og ændre *K24* og tabeller).
+* Refresh materialized view *_allnearbystops* eller lav nyt hvis datakilde har ændret sig (kopier det gamle og ændre *K24* og tabelnavne).
 * Anvendt farveskala:
-    * Meget høj, #FFE0E0 (afgange_døgn > 216 and bus > 0 and letbane_lokalbane > 0)
-    * Høj, #E59B97 (afgange_døgn > 216 and (bus=0 or letbane_lokalbane=0))
+    * Meget høj, #FFE0E0 (afgange_døgn > 216 and antal_standertyper >= 2)
+    * Høj, #E59B97 (afgange_døgn > 216 and antal_standertyper = 1)
     * Middel, #C2584D (96 <= afgange_døgn <= 216)
     * Lav, #950000 (0 < afgange_døgn < 96)
+    * Kun Flex, #0000FF (afgange_døgn = 0 and adgang_flex = true)
     * Ingen, #000000 (afgange_døgn = 0)
 
 ![screenshot](Ressourcer/Kvadratnet_allnearbystops.png)
@@ -213,5 +216,8 @@ Havde løsningen været med OSMNX (Python) viste mine oprindelige eksperimenter 
 
 
 # Backlog
+* Tilføj togafgange til **SQL/Alle stop indenfor distance**
+* Tilføj vinkestrækninger til **SQL/aktuelle_stop.sql** og afgange på vinkestrækninger til **SQL/Alle stop indenfor distance**
+* Evt. til afgange over flere tidsrum morgen, eftermiddag, aften til **SQL/Alle stop indenfor distance**
 * Skrivning af shapefil fra geopandas er langsom for store filer.
 

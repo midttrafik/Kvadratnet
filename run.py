@@ -24,7 +24,7 @@ if __name__ == '__main__':
     if task_type == 'Nærmeste stop':
         task_strategy = ShortestPath()
     elif task_type == 'Stop indenfor distance':
-        max_distances = click.prompt("Liste af distancer", type=str, default='250,500,1000')
+        max_distances = click.prompt("Liste af distancer", type=str, default='400,500,600,800,1000,2000')
         max_distances = [int(dist) for dist in max_distances.split(',')]
         task_strategy = AllNearbyStops(max_distances=max_distances)
     
