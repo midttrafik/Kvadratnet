@@ -26,10 +26,10 @@ AS
             b.aar_info,
             b.info,
             b.antal,
-            d.dist_total,
-            d.dist_path, -- evt fjern
-            d.dist_input, -- evt fjern
-            d.dist_stop, -- evt fjern
+            ROUND(d.dist_total, 2) AS dist_total,
+            ROUND(d.dist_path, 2) AS dist_path, -- evt fjern
+            ROUND(d.dist_input, 2) AS dist_input, -- evt fjern
+            ROUND(d.dist_stop, 2) AS dist_stop, -- evt fjern
             d.stop_name,
             d.stop_id,
             d.stop_osmid, -- evt fjern
