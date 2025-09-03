@@ -7,6 +7,7 @@ sys.path.insert(0, os.getcwd())
 
 import pandas as pd
 import numpy as np
+from shapely import Point, LineString
 from src.strategy.TaskStrategy import *
 
 import unittest
@@ -192,6 +193,103 @@ class TestAllNearbyStops(unittest.TestCase):
         
         self.assertCountEqual(output.columns, expected_columns)
         self.assertTrue(isinstance(output, pd.DataFrame))
+
+
+class TestFlextur(unittest.TestCase):
+    def setUp(self):
+        self.crs = 'EPSG:25832'
+        
+        # eksempel flexturs data
+        kvadratnet_data = {
+            'id': [0, 1, 2, 3],
+            'Antal Rejser': [5, 2, 6, 7],
+            'Antal passagerer': [10, 56, 23, 24],
+            'Kommune1': [None, None, None, None],
+            'Planet1': [None, None, None, None],
+            'Fra X': [None, None, None, None],
+            'Fra Y': [None, None, None, None],
+            'Kommune2': [None, None, None, None],
+            'Planet2': [None, None, None, None],
+            'Til X': [None, None, None, None],
+            'Til Y': [None, None, None, None],
+            'Rejsetype': [None, None, None, None],
+            'Periode': [None, None, None, None],
+            'Retning': [None, None, None, None],
+            'geometry_center': [Point(1, 1), 
+                                Point(2, 2), 
+                                Point(3, 3), 
+                                Point(4, 4)], # fra punkt
+            'point_to': [Point(2, 2), 
+                         Point(1, 1), 
+                         Point(1, 1), 
+                         Point(3, 3)], # til punkt
+            'bird_flight': [LineString([[1, 1], [2, 2]]), 
+                            LineString([[2, 2], [1, 1]]), 
+                            LineString([[3, 3], [1, 1]]), 
+                            LineString([[4, 4], [3, 3]])], # fugleflugtslinje
+            'the_geom': [LineString([[1, 1], [1, 2], [2, 2]]),
+                         LineString([[2, 2], [1, 2], [1, 1]]), 
+                         LineString([]), # ingen vej på vejnettet
+                         LineString([[4, 4], [4, 3], [3, 3]])], # geometri for korteste vej
+            'osmid': [2000, 2001, 2002, 2003],
+            'iGraph_id': [3000, 3001, 3002, 3003],
+        }
+        self.kvadratnet_gdf = gpd.GeoDataFrame(kvadratnet_data).set_geometry('geometry_center', crs=self.crs)
+
+        # kopi af flexturs data kun for til-punkt
+        stop_data = {
+            'geometry': [Point(2, 2), 
+                         Point(1, 1), 
+                         Point(1, 1), 
+                         Point(3, 3)], # til punkt
+            'osmid': [1001, 1002, 1003, 1004],
+            'iGraph_id': [10, 20, 30, 40],
+        }
+        self.stop_gdf = gpd.GeoDataFrame(stop_data, crs=self.crs)
+        
+        # vælg opgave
+        self.task_strategy = Flextur()
+        
+    
+    def test_prepare_input(self):
+        pass
+    
+    
+    def test_associate_centroids_and_stops(self):
+        pass
+    
+    
+    def test_get_route_items(self):
+        pass
+    
+    
+    def test_prepare_output_linestring(self):
+        expected_line = [LineString([[1, 1], [1, 2], [2, 2]]),
+                         LineString([[2, 2], [1, 2], [1, 1]]), 
+                         LineString([[3, 3], [1, 1]]), # fugleflugt
+                         LineString([[4, 4], [4, 3], [3, 3]])]
+        
+        output = self.task_strategy.prepare_output(self.kvadratnet_gdf)
+        
+        self.assertListEqual(output['the_geom'].to_list(), expected_line)
+        
+        self.assertTrue(output.geometry.name == 'the_geom')
+    
+    
+    def test_prepare_output_columns(self):
+        output = self.task_strategy.prepare_output(self.kvadratnet_gdf)
+        
+        self.assertTrue('geometry_center' not in output.columns)
+        self.assertTrue('point_to' not in output.columns)
+        self.assertTrue('bird_flight' not in output.columns)
+        self.assertTrue('Fra X' not in output.columns)
+        self.assertTrue('Fra Y' not in output.columns)
+        self.assertTrue('Til X' not in output.columns)
+        self.assertTrue('Til Y' not in output.columns)
+    
+    
+    def test_get_output_suffix(self):
+        self.assertEqual(self.task_strategy.get_output_suffix(), 'vejnet.csv')
 
 
 if __name__ == '__main__':

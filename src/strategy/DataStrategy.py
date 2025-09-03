@@ -64,6 +64,12 @@ class FlexturData(DataLoader):
             encoding='Latin-1'
         )
         
+        df.rename(
+            columns={'Antal Rejser': 'rejser',
+                     'Antal passagerer': 'passagerer'}, 
+            inplace=True
+        )
+        
         # til føj id kolonne
         df['id'] = [i for i in range(0, df.shape[0])]
         

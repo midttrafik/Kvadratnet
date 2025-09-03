@@ -188,5 +188,52 @@ class AllNearbyStops(TaskStrategy):
     def write_output(self, output, path, filename) -> None:
         output.to_csv(path + filename, sep=',', header=True)
 
+
+#####################################################
+# Flextur, vej på vejnettet
+#####################################################
+class Flextur(TaskStrategy):
+    def __init__(self) -> None:
+        pass
     
+    
+    def prepare_input(self, 
+                      input_gdf):
+        return None
+    
+    
+    def associate_centroids_and_stops(self, 
+                                      kvadratnet_df,
+                                      stop_gdf,
+                                      distances,
+                                      centroid_nodes_ig,
+                                      stop_nodes_ig):
+        return None
+    
+    
+    def get_route_items(self, kvadratnet):
+        return None, None
+    
+    
+    def prepare_output(self,
+                       kvadratnet_df):
+        # vejen på vejnettet er the_geom 
+        # undtagen hvis den er tom (der findes ingen vej) så brug fugleflugt
+        kvadratnet_df['the_geom'] = kvadratnet_df.apply(
+            lambda row: row['bird_flight'] if row['the_geom'].is_empty else row['the_geom'],
+            axis=1
+        )
+        
+        kvadratnet_df.set_geometry('the_geom', inplace=True)
+        kvadratnet_df.drop(columns=['geometry_center', 'point_to', 'bird_flight', 'Fra X', 'Fra Y', 'Til X', 'Til Y'], inplace=True)
+        
+        return kvadratnet_df
+    
+    
+    def get_output_suffix(self):
+        return 'vejnet.csv'
+    
+    
+    def write_output(self, output, path, filename) -> None:
+        pass
     
