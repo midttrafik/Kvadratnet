@@ -199,7 +199,11 @@ class Flextur(TaskStrategy):
     
     def prepare_input(self, 
                       input_gdf):
-        return None
+        
+        input_gdf['the_geom'] = None
+        input_gdf['stop_iGraph_id'] = None
+        
+        return input_gdf
     
     
     def associate_centroids_and_stops(self, 

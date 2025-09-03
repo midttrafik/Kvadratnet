@@ -250,10 +250,6 @@ class TestFlextur(unittest.TestCase):
         
         # vælg opgave
         self.task_strategy = Flextur()
-        
-    
-    def test_prepare_input(self):
-        pass
     
     
     def test_associate_centroids_and_stops(self):
