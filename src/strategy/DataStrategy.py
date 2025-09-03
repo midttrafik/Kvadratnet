@@ -1,5 +1,6 @@
 import pandas as pd
 import geopandas as gpd
+from shapely import LineString
 from src.abstract.DataLoader import DataLoader
 
 
@@ -41,6 +42,76 @@ class Punkter(DataLoader):
         # lav kopi af geometry kolonne
         punkter['geometry_center'] = punkter['geometry'].copy()
         return punkter
+
+
+class FlexturData(DataLoader):
+    def __init__(self,
+                 path: str,
+                 filename: str,
+                 crs: str,
+                 method: str) -> None:
+        self.path = path
+        self.filename = filename
+        self.crs = crs
+        self.method = method
+    
+    def get_data(self) -> pd.DataFrame:
+        # indlæs fil
+        df = pd.read_csv(
+            self.path + self.filename,
+            delimiter=';',
+            decimal=',',
+            encoding='Latin-1'
+        )
+        
+        # til føj id kolonne
+        df['id'] = [i for i in range(0, df.shape[0])]
+        
+        # lav geometri for fra punkt og til punkt
+        point_from = gpd.points_from_xy(
+            x=df['Fra X'], 
+            y=df['Fra Y'],
+            crs=self.crs
+        )
+        point_to = gpd.points_from_xy(
+            x=df['Til X'], 
+            y=df['Til Y'],
+            crs=self.crs
+        )
+        
+        if self.method == 'Input':
+            # lav geometri dataframe
+            gdf = gpd.GeoDataFrame(
+                df, 
+                geometry=None
+            )
+            
+            # opbevar fra punkt og til punkt
+            gdf['point_from'] = point_from
+            gdf['point_to'] = point_to
+            
+            # lav fugleflugtslinje mellem fra og til punkt for senere brug
+            gdf['bird_flight'] = gdf.apply(
+                lambda row: LineString([row['point_from'], row['point_to']]), 
+                axis=1
+            )
+
+            # tilføj geometri
+            gdf.set_geometry('point_from', inplace=True, crs=self.crs)           
+            gdf.rename_geometry('geometry_center', inplace=True)
+            
+        elif self.method == 'Stop':
+            # lav geometri dataframe
+            gdf = gpd.GeoDataFrame(
+                df,
+                geometry=point_to,
+                crs=self.crs
+            )
+            
+        else:
+            raise Exception('Fejl i indlæsning af Flexturs data')
+        
+        return gdf
     
 
 class MobilePlan(DataLoader):
