@@ -83,6 +83,10 @@ class TestShortestPath(unittest.TestCase):
         self.assertTrue(isinstance(output, gpd.GeoDataFrame))
 
 
+    def test_skip_shortest_distance(self):
+        self.assertTrue(self.task_strategy.skip_shortest_distance() == False)
+    
+
     # test om navn på nærmeste stop tildeles korrekt til hvert kvadrat
     def test_stop_name(self):
         expected_stop_names = ['Stop C', 'Stop B', 'Stop C', 'Stop E']
@@ -106,7 +110,7 @@ class TestShortestPath(unittest.TestCase):
     
     # test om der returneres centroide og stop id'er så rutegeometrier kan udregnes
     def test_route_items(self):
-        centroids, closest_stops = self.task_strategy.get_route_items(self.updated_kvadratnet_gdf)
+        centroids, closest_stops = self.task_strategy.get_route_items(self.updated_kvadratnet_gdf, self.stop_gdf)
                 
         self.assertTrue(len(centroids) > 0)
         self.assertTrue(len(closest_stops) > 0)
@@ -166,7 +170,11 @@ class TestAllNearbyStops(unittest.TestCase):
     # test om filnavnet får den rigtige endelse
     def test_output_suffix(self):
         self.assertEqual(self.task_strategy.get_output_suffix(), 'allnearbystops.csv')
-        
+    
+    
+    def test_skip_shortest_distance(self):
+        self.assertTrue(self.task_strategy.skip_shortest_distance() == False)
+    
         
     # test om listen af stop udregnes korrekt for hvert kvadrat
     def test_stop_names(self):
@@ -179,7 +187,7 @@ class TestAllNearbyStops(unittest.TestCase):
 
     # test at der ikke returneres centroide og stop id'er da rutegeometrier ikke skal findes
     def test_route_items(self):
-        centroids, closest_stops = self.task_strategy.get_route_items(self.updated_kvadratnet_gdf)
+        centroids, closest_stops = self.task_strategy.get_route_items(self.updated_kvadratnet_gdf, self.stop_gdf)
                 
         self.assertTrue(len(centroids) == 0)
         self.assertTrue(len(closest_stops) == 0)
@@ -202,8 +210,8 @@ class TestFlextur(unittest.TestCase):
         # eksempel flexturs data
         kvadratnet_data = {
             'id': [0, 1, 2, 3],
-            'Antal Rejser': [5, 2, 6, 7],
-            'Antal passagerer': [10, 56, 23, 24],
+            'Rejser': [5, 2, 6, 7],
+            'Passagerer': [10, 56, 23, 24],
             'Kommune1': [None, None, None, None],
             'Planet1': [None, None, None, None],
             'Fra X': [None, None, None, None],
@@ -232,8 +240,7 @@ class TestFlextur(unittest.TestCase):
                          LineString([]), # ingen vej på vejnettet
                          LineString([[4, 4], [4, 3], [3, 3]])], # geometri for korteste vej
             'osmid': [2000, 2001, 2002, 2003],
-            'iGraph_id': [3000, 3001, 3002, 3003],
-            'stop_iGraph_id': [3001, 3000, 3000, 3002]
+            'iGraph_id': [3000, 3001, 3002, 3003]
         }
         self.kvadratnet_gdf = gpd.GeoDataFrame(kvadratnet_data).set_geometry('geometry_center', crs=self.crs)
 
@@ -243,8 +250,8 @@ class TestFlextur(unittest.TestCase):
                          Point(1, 1), 
                          Point(1, 1), 
                          Point(3, 3)], # til punkt
-            'osmid': [1001, 1002, 1003, 1004],
-            'iGraph_id': [10, 20, 30, 40],
+            'osmid': [2001, 2000, 2000, 2002],
+            'iGraph_id': [3001, 3000, 3000, 3002]
         }
         self.stop_gdf = gpd.GeoDataFrame(stop_data, crs=self.crs)
         
@@ -252,12 +259,12 @@ class TestFlextur(unittest.TestCase):
         self.task_strategy = Flextur()
     
     
-    def test_associate_centroids_and_stops(self):
-        pass
+    def test_skip_shortest_distance(self):
+        self.assertTrue(self.task_strategy.skip_shortest_distance() == True)
     
     
     def test_get_route_items(self):
-        point_from, point_to = self.task_strategy.get_route_items(self.kvadratnet_gdf)
+        point_from, point_to = self.task_strategy.get_route_items(self.kvadratnet_gdf, self.stop_gdf)
         self.assertTrue(len(point_from) > 0)
         self.assertTrue(len(point_to) > 0)
     
@@ -285,6 +292,8 @@ class TestFlextur(unittest.TestCase):
         self.assertTrue('Fra Y' not in output.columns)
         self.assertTrue('Til X' not in output.columns)
         self.assertTrue('Til Y' not in output.columns)
+        self.assertTrue('osmid' not in output.columns)
+        self.assertTrue('iGraph_id' not in output.columns)
     
     
     def test_get_output_suffix(self):

@@ -65,8 +65,8 @@ class FlexturData(DataLoader):
         )
         
         df.rename(
-            columns={'Antal Rejser': 'rejser',
-                     'Antal passagerer': 'passagerer'}, 
+            columns={'Antal Rejser': 'Rejser',
+                     'Antal passagerer': 'Passagerer'}, 
             inplace=True
         )
         

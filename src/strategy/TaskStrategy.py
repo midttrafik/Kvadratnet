@@ -24,6 +24,10 @@ class ShortestPath(TaskStrategy):
         return input_gdf
     
     
+    def skip_shortest_distance(self):
+        return False
+    
+    
     def associate_centroids_and_stops(self, 
                                       kvadratnet_df,
                                       stop_gdf,
@@ -66,7 +70,7 @@ class ShortestPath(TaskStrategy):
         return kvadratnet_df
     
     
-    def get_route_items(self, kvadratnet):
+    def get_route_items(self, kvadratnet, stop_gdf):
         centroids = kvadratnet['iGraph_id'].tolist()
         closest_stops = kvadratnet['stop_iGraph_id'].tolist()
         return centroids, closest_stops
@@ -122,6 +126,10 @@ class AllNearbyStops(TaskStrategy):
         return input_gdf
     
     
+    def skip_shortest_distance(self):
+        return False
+    
+    
     def associate_centroids_and_stops(self, 
                                       kvadratnet_df,
                                       stop_gdf,
@@ -162,7 +170,7 @@ class AllNearbyStops(TaskStrategy):
         return kvadratnet_df
     
     
-    def get_route_items(self, kvadratnet):
+    def get_route_items(self, kvadratnet, stop_gdf):
         # der skal ikke findes rutegeometrier fra hvert kvadrat til hvert stop indenfor distance
         centroids = []
         closest_stops = []
@@ -200,10 +208,11 @@ class Flextur(TaskStrategy):
     def prepare_input(self, 
                       input_gdf):
         
-        input_gdf['the_geom'] = None
-        input_gdf['stop_iGraph_id'] = None
-        
         return input_gdf
+    
+    
+    def skip_shortest_distance(self):
+        return True
     
     
     def associate_centroids_and_stops(self, 
@@ -215,14 +224,13 @@ class Flextur(TaskStrategy):
         return None
     
     
-    def get_route_items(self, kvadratnet):
+    def get_route_items(self, kvadratnet, stop_gdf):
         point_from = kvadratnet['iGraph_id'].tolist()
-        point_to = kvadratnet['stop_iGraph_id'].tolist()
+        point_to = stop_gdf['iGraph_id'].to_list()
         return point_from, point_to
     
     
-    def prepare_output(self,
-                       kvadratnet_df):
+    def prepare_output(self, kvadratnet_df):
         # vejen på vejnettet er the_geom 
         # undtagen hvis den er tom (der findes ingen vej) så brug fugleflugt
         kvadratnet_df['the_geom'] = kvadratnet_df.apply(
@@ -230,8 +238,16 @@ class Flextur(TaskStrategy):
             axis=1
         )
         
+        # sæt geometri til vej på vejnettet
         kvadratnet_df.set_geometry('the_geom', inplace=True)
-        kvadratnet_df.drop(columns=['geometry_center', 'point_to', 'bird_flight', 'Fra X', 'Fra Y', 'Til X', 'Til Y'], inplace=True)
+        
+        # drop unødvendige kolonner
+        kvadratnet_df.drop(
+            columns=[
+                'geometry_center', 'point_to', 'bird_flight', 'Fra X', 
+                'Fra Y', 'Til X', 'Til Y', 'osmid', 'iGraph_id'], 
+            inplace=True
+        )
         
         return kvadratnet_df
     
@@ -241,5 +257,7 @@ class Flextur(TaskStrategy):
     
     
     def write_output(self, output, path, filename) -> None:
-        pass
+        output.to_file(path + filename, 
+                       driver='ESRI Shapefile')
+
     

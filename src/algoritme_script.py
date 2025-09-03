@@ -391,13 +391,16 @@ class PathAlgorithm:
         #-------------------
         start = time()
         print('-'*50)
-        print('4/6 Påbegynder udregning af korteste distancer.')
+        if self.task_strategy.skip_shortest_distance():
+            print('4/6 Springer over udregninger af korteste distancer')
+        else:
+            print('4/6 Påbegynder udregning af korteste distancer.')
 
-        kvadratnet = self.find_shortest_distance(kvadratnet, stop_gdf, stop_nodes_ig, centroid_nodes_ig, G_ig, self.chunk_size)
+            kvadratnet = self.find_shortest_distance(kvadratnet, stop_gdf, stop_nodes_ig, centroid_nodes_ig, G_ig, self.chunk_size)
 
-        end = time()
-        print(f'Udregnet korteste distancer på {round(end-start, 2)} sekunder.')
-        
+            end = time()
+            print(f'Udregnet korteste distancer på {round(end-start, 2)} sekunder.')
+            
         
         #---------------------------
         start = time()
@@ -405,14 +408,14 @@ class PathAlgorithm:
         print('5/6 Henter geometrier for korteste veje.')
         
         # hent sources og targets hvis vej geometrien skal udregnes
-        sources, destinations = self.task_strategy.get_route_items(kvadratnet)
+        sources, destinations = self.task_strategy.get_route_items(kvadratnet, stop_gdf)
         if len(sources) == 0:
             print('Ingen geometrier hentet.')
         else:
             kvadratnet = self.get_routes(kvadratnet, sources, destinations, G_ig, G_proj)
 
         end = time()
-        print(f'Henetet geometrier for korteste veje på {round(end-start, 2)} sekunder.')
+        print(f'Hentet geometrier for korteste veje på {round(end-start, 2)} sekunder.')
         
         
         #------------------------------

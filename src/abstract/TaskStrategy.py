@@ -17,6 +17,17 @@ class TaskStrategy(ABC):
         pass
     
     @abstractmethod
+    def skip_shortest_distance(self):
+        """ Angiv om korteste distancer skal udregnes
+        
+        Args:
+            
+        Output:
+            - Boolsk udtryk True/False. True hvis korteste distance ikke skal udregnes, False hvis den skal udregnes.
+        """
+        pass
+    
+    @abstractmethod
     def associate_centroids_and_stops(self,
                                       kvadratnet_df,
                                       stop_gdf,
@@ -38,11 +49,12 @@ class TaskStrategy(ABC):
         pass
     
     @abstractmethod
-    def get_route_items(self, kvadratnet):
+    def get_route_items(self, kvadratnet, stop_gdf):
         """ Hent id'er på kvadratnet og tilhørende stop hvor geometrien for korteste vej skal udregnes.
 
         Args:
             kvadratnet (GeoDataFrame): kvadratnet
+            stop_gdf (GeoDataFrame): stop
         
         Output:
             - igraph id'er for kvadratnet eller tom liste
