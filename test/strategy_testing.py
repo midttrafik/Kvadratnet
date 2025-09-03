@@ -233,6 +233,7 @@ class TestFlextur(unittest.TestCase):
                          LineString([[4, 4], [4, 3], [3, 3]])], # geometri for korteste vej
             'osmid': [2000, 2001, 2002, 2003],
             'iGraph_id': [3000, 3001, 3002, 3003],
+            'stop_iGraph_id': [3001, 3000, 3000, 3002]
         }
         self.kvadratnet_gdf = gpd.GeoDataFrame(kvadratnet_data).set_geometry('geometry_center', crs=self.crs)
 
@@ -260,7 +261,9 @@ class TestFlextur(unittest.TestCase):
     
     
     def test_get_route_items(self):
-        pass
+        point_from, point_to = self.task_strategy.get_route_items(self.kvadratnet_gdf)
+        self.assertTrue(len(point_from) > 0)
+        self.assertTrue(len(point_to) > 0)
     
     
     def test_prepare_output_linestring(self):

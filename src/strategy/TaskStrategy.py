@@ -212,7 +212,9 @@ class Flextur(TaskStrategy):
     
     
     def get_route_items(self, kvadratnet):
-        return None, None
+        point_from = kvadratnet['iGraph_id'].tolist()
+        point_to = kvadratnet['stop_iGraph_id'].tolist()
+        return point_from, point_to
     
     
     def prepare_output(self,
