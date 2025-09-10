@@ -328,19 +328,23 @@ class PathAlgorithm:
         stop_gdf = stop_gdf.reset_index(drop=True)
         
 
-        # hent OSM polygon
-        polygon = self.get_OSM_polygon(self.osm_place, self.crs)
-        
-        # fjern kvadrater udenfor OSM polygon
-        kvadratnet = self.remove_objects_outside_polygon(kvadratnet, polygon, geom_col='geometry_center')
-        print(f'Fjernet kvadrater udenfor {self.osm_place}, antallet af kvadrater er nu {kvadratnet.shape[0]}')
-        
-        # fjern stop udenfor OSM polygon
-        stop_gdf = self.remove_objects_outside_polygon(stop_gdf, polygon, geom_col='geometry')
-        print(f'Fjernet stop udenfor {self.osm_place}, antallet af stop er nu {stop_gdf.shape[0]}')
+        if self.task_strategy.skip_truncate_by_polygon():
+            pass
+        else:
+            # hent OSM polygon
+            polygon = self.get_OSM_polygon(self.osm_place, self.crs)
+            
+            # fjern kvadrater udenfor OSM polygon
+            kvadratnet = self.remove_objects_outside_polygon(kvadratnet, polygon, geom_col='geometry_center')
+            print(f'Fjernet kvadrater udenfor {self.osm_place}, antallet af kvadrater er nu {kvadratnet.shape[0]}')
+            
+            # fjern stop udenfor OSM polygon
+            stop_gdf = self.remove_objects_outside_polygon(stop_gdf, polygon, geom_col='geometry')
+            print(f'Fjernet stop udenfor {self.osm_place}, antallet af stop er nu {stop_gdf.shape[0]}')
 
-        # frigør plads i memory da den ikke skal bruges mere
-        del polygon
+            # frigør plads i memory da den ikke skal bruges mere
+            del polygon
+
 
         # hent osm data, projicer til crs og fjern connected components hvis de indeholder færre knuder end fastsatte grænse
         G_proj = self.read_and_project_OSM(self.osm_place, self.crs)

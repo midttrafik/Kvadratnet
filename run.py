@@ -19,7 +19,7 @@ if __name__ == '__main__':
     
     print("-"*50)
     print("Indtast information om opgaven.")
-    task_type = click.prompt("Opgave type", type=click.Choice(['Nærmeste stop', 'Stop indenfor distance']))
+    task_type = click.prompt("Opgave type", type=click.Choice(['Nærmeste stop', 'Stop indenfor distance', 'Flextur på vejnettet']))
     
     if task_type == 'Nærmeste stop':
         task_strategy = ShortestPath()
@@ -27,11 +27,13 @@ if __name__ == '__main__':
         max_distances = click.prompt("Liste af distancer", type=str, default='400,500,600,800,1000,2000')
         max_distances = [int(dist) for dist in max_distances.split(',')]
         task_strategy = AllNearbyStops(max_distances=max_distances)
+    elif task_type == 'Flextur på vejnettet':
+        task_strategy = Flextur()
     
     
     print("-"*50)
     print("Indtast information om kvadratnet.")
-    kvadratnet_type = click.prompt("Indlæsning af data", type=click.Choice(['Polygoner', 'Punkter']))
+    kvadratnet_type = click.prompt("Indlæsning af data", type=click.Choice(['Polygoner', 'Punkter', 'FlexturData']))
     kvadratnet_filename = click.prompt("Navn på datafil uden sti til mappe", type=str)
     
     if kvadratnet_type == 'Polygoner':
@@ -46,13 +48,20 @@ if __name__ == '__main__':
             filename=kvadratnet_filename,
             crs=crs
         )
+    elif kvadratnet_type == 'FlexturData':
+        kvadratnet_handler = FlexturData(
+            path=data_path,
+            filename=kvadratnet_filename,
+            crs=crs,
+            method='Input'
+        )
     else:
         raise Exception('Ugyldig metode til indlæsning af kvadratnet.')
 
     
     print("-"*50)
     print("Indtast information om stop.")
-    stop_type = click.prompt("Indlæsning af stop", type=click.Choice(['MobilePlan', 'Shapefil']))
+    stop_type = click.prompt("Indlæsning af stop", type=click.Choice(['MobilePlan', 'Shapefil', 'FlexturData']))
     stop_filename = click.prompt("Navn på stopfil uden sti til mappe", type=str)
     flex = click.prompt("Fjern Flextur", type=bool, default=False)
     plus = click.prompt("Fjern Plustur", type=bool, default=True)
@@ -84,6 +93,13 @@ if __name__ == '__main__':
             stop_code_col=stop_code_col, 
             stop_name_col=stop_name_col, 
             stop_geometry_col=stop_geometry_col
+        )
+    elif stop_type == 'FlexturData':
+        stop_handler = FlexturData(
+            path=data_path,
+            filename=kvadratnet_filename,
+            crs=crs,
+            method='Stop'
         )
     else:
         raise Exception('Ugyldig metode til indlæsning af stop.')

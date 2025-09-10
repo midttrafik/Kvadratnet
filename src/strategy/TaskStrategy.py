@@ -10,6 +10,11 @@ class ShortestPath(TaskStrategy):
     def __init__(self) -> None:
         pass
     
+    
+    def skip_truncate_by_polygon(self):
+        return False
+    
+    
     def prepare_input(self, 
                       input_gdf):
         # definer kolonnerne vi ønsker at udregne
@@ -115,6 +120,10 @@ class AllNearbyStops(TaskStrategy):
         self.max_distances = max_distances
     
     
+    def skip_truncate_by_polygon(self):
+        return False
+    
+    
     def prepare_input(self, 
                       input_gdf):
         
@@ -205,6 +214,10 @@ class Flextur(TaskStrategy):
         pass
     
     
+    def skip_truncate_by_polygon(self):
+        return True
+    
+    
     def prepare_input(self, 
                       input_gdf):
         
@@ -225,16 +238,26 @@ class Flextur(TaskStrategy):
     
     
     def get_route_items(self, kvadratnet, stop_gdf):
+        
         point_from = kvadratnet['iGraph_id'].tolist()
         point_to = stop_gdf['iGraph_id'].to_list()
+        
         return point_from, point_to
     
     
     def prepare_output(self, kvadratnet_df):
         # vejen på vejnettet er the_geom 
-        # undtagen hvis den er tom (der findes ingen vej) så brug fugleflugt
+        # undtagen hvis den ikke findes, er tom eller er udenfor osm_place 
+        # så brug fugleflugt
+        planets_outside_osm_jylland = [
+            'str999', # venø
+            'thy101', # jegindø
+            'sun110', 'sun112', 'sun115', 'sun118', # fur 
+            'odd034', 'odd110', # alrø
+            'jue235', 'hor296' # hjarnø
+        ]
         kvadratnet_df['the_geom'] = kvadratnet_df.apply(
-            lambda row: row['bird_flight'] if row['the_geom'].is_empty else row['the_geom'],
+            lambda row: row['bird_flight'] if row['the_geom'] is None or row['the_geom'].is_empty or row['Planet1'].lower() in planets_outside_osm_jylland  or row['Planet2'].lower() in planets_outside_osm_jylland else row['the_geom'],
             axis=1
         )
         
@@ -245,7 +268,8 @@ class Flextur(TaskStrategy):
         kvadratnet_df.drop(
             columns=[
                 'geometry_center', 'point_to', 'bird_flight', 'Fra X', 
-                'Fra Y', 'Til X', 'Til Y', 'osmid', 'iGraph_id'], 
+                'Fra Y', 'Til X', 'Til Y', 'osmid', 'iGraph_id', 'id', 
+                'dist_input'],
             inplace=True
         )
         
@@ -253,7 +277,7 @@ class Flextur(TaskStrategy):
     
     
     def get_output_suffix(self):
-        return 'vejnet.csv'
+        return 'vejnet.shp'
     
     
     def write_output(self, output, path, filename) -> None:

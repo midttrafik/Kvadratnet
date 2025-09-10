@@ -68,6 +68,10 @@ class TestShortestPath(unittest.TestCase):
         )
     
     
+    def test_skip_truncate_by_polygon(self):
+        self.assertTrue(self.task_strategy.skip_truncate_by_polygon() == False)
+    
+    
     # test om filnavnet får den rigtige endelse
     def test_output_suffix(self):
         self.assertEqual(self.task_strategy.get_output_suffix(), 'shortestpath.shp')
@@ -167,6 +171,10 @@ class TestAllNearbyStops(unittest.TestCase):
         )
     
     
+    def test_skip_truncate_by_polygon(self):
+        self.assertTrue(self.task_strategy.skip_truncate_by_polygon() == False)
+    
+    
     # test om filnavnet får den rigtige endelse
     def test_output_suffix(self):
         self.assertEqual(self.task_strategy.get_output_suffix(), 'allnearbystops.csv')
@@ -213,11 +221,11 @@ class TestFlextur(unittest.TestCase):
             'Rejser': [5, 2, 6, 7],
             'Passagerer': [10, 56, 23, 24],
             'Kommune1': [None, None, None, None],
-            'Planet1': [None, None, None, None],
+            'Planet1': ['AAR101', 'AAR102', 'AAR103', 'STR999'],
             'Fra X': [None, None, None, None],
             'Fra Y': [None, None, None, None],
             'Kommune2': [None, None, None, None],
-            'Planet2': [None, None, None, None],
+            'Planet2': ['AAR102', 'AAR101', 'AAR101', 'AAR103'],
             'Til X': [None, None, None, None],
             'Til Y': [None, None, None, None],
             'Rejsetype': [None, None, None, None],
@@ -240,12 +248,14 @@ class TestFlextur(unittest.TestCase):
                          LineString([]), # ingen vej på vejnettet
                          LineString([[4, 4], [4, 3], [3, 3]])], # geometri for korteste vej
             'osmid': [2000, 2001, 2002, 2003],
-            'iGraph_id': [3000, 3001, 3002, 3003]
+            'iGraph_id': [3000, 3001, 3002, 3003],
+            'dist_input': [None, None, None, None]
         }
         self.kvadratnet_gdf = gpd.GeoDataFrame(kvadratnet_data).set_geometry('geometry_center', crs=self.crs)
 
         # kopi af flexturs data kun for til-punkt
         stop_data = {
+            'id': [0, 1, 2, 3],
             'geometry': [Point(2, 2), 
                          Point(1, 1), 
                          Point(1, 1), 
@@ -257,6 +267,9 @@ class TestFlextur(unittest.TestCase):
         
         # vælg opgave
         self.task_strategy = Flextur()
+    
+    def test_skip_truncate_by_polygon(self):
+        self.assertTrue(self.task_strategy.skip_truncate_by_polygon() == True)
     
     
     def test_skip_shortest_distance(self):
@@ -272,8 +285,8 @@ class TestFlextur(unittest.TestCase):
     def test_prepare_output_linestring(self):
         expected_line = [LineString([[1, 1], [1, 2], [2, 2]]),
                          LineString([[2, 2], [1, 2], [1, 1]]), 
-                         LineString([[3, 3], [1, 1]]), # fugleflugt
-                         LineString([[4, 4], [4, 3], [3, 3]])]
+                         LineString([[3, 3], [1, 1]]), # fugleflugt pga. tom geom
+                         LineString([[4, 4], [3, 3]])] # fugleflugt pga. planet
         
         output = self.task_strategy.prepare_output(self.kvadratnet_gdf)
         
@@ -294,10 +307,12 @@ class TestFlextur(unittest.TestCase):
         self.assertTrue('Til Y' not in output.columns)
         self.assertTrue('osmid' not in output.columns)
         self.assertTrue('iGraph_id' not in output.columns)
+        self.assertTrue('id' not in output.columns)
+        self.assertTrue('dist_input' not in output.columns)
     
     
     def test_get_output_suffix(self):
-        self.assertEqual(self.task_strategy.get_output_suffix(), 'vejnet.csv')
+        self.assertEqual(self.task_strategy.get_output_suffix(), 'vejnet.shp')
 
 
 if __name__ == '__main__':

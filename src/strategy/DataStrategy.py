@@ -114,6 +114,9 @@ class FlexturData(DataLoader):
                 crs=self.crs
             )
             
+            gdf['stop_name'] = None
+            gdf['stop_code'] = None
+            
         else:
             raise Exception('Fejl i indlæsning af Flexturs data')
         

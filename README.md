@@ -65,7 +65,15 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
 
 <br/>
 
-## Webgis: Nærmeste stop
+## Nærmeste stop
+* OSM: Region Midtjylland
+* Opgavetype: Nærmeste stop
+* Fjern Flextur: True
+* Fjern Plustur: True
+* Fjern 09 stander: False
+* Fjern nedlagte stop: True
+
+I Webgis:
 * Sørg for at original datakilde er i Webgis.
 * Lav eller opdater (tøm/tilføj) resultat tabel.
 * Refresh materialized views *_shortestpath* og *_shortestpath_line* eller lav nye hvis datakilde har ændret sig (kopier de gamle og ændre tabeller).
@@ -88,7 +96,15 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
 </br>
 
 
-## Webgis: Stop indenfor distance (analyse af serviceniveau)
+## Stop indenfor distance (analyse af serviceniveau)
+* OSM: Region Midtjylland
+* Opgavetype: Stop indenfor distance
+* Fjern Flextur: False
+* Fjern Plustur: True
+* Fjern 09 stander: False
+* Fjern nedlagte stop: True
+
+I Webgis:
 * Sørg for at original datakilde er i Webgis.
 * Lav eller opdater (tøm/tilføj) resultat tabel.
 * Refresh materialized view *_allnearbystops* eller lav nyt hvis datakilde har ændret sig (kopier det gamle og ændre *K24* og tabelnavne).
@@ -103,6 +119,22 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
 ![screenshot](Ressourcer/Kvadratnet_allnearbystops.png)
 
 <br/>
+
+
+## Flextur på vejnettet
+* OSM: Jylland
+* Opgavetype: Flextur på vejnettet
+* Kvadratnet type data: FlexturData
+* Stop type data: FlexturData
+* Stop filnavn: det samme som kvadratnet filnavn
+* Fjern Flextur: ligegyldig
+* Fjern Plustur: ligegyldig
+* Fjern 09 stander: ligegyldig
+* Fjern nedlagte stop: ligegyldig
+
+I Webgis:
+* Anonymiser passagerer og rejser med "5 eller derunder" i f.eks. Python eller QGis.
+* TODO
 
 
 ## Vigtigt

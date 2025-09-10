@@ -5,6 +5,17 @@ class TaskStrategy(ABC):
     """
     
     @abstractmethod
+    def skip_truncate_by_polygon(self):
+        """ Angiv om kvadrater og stop udenfor polygon skal fjernes.
+        
+        Args:
+        Output:
+            - Boolsk udtryk True/False. True hvis objekter udenfor polygon ikke skal fjernes, False hvis de skal fjernes.
+        
+        """
+        pass
+    
+    @abstractmethod
     def prepare_input(self, input_gdf):
         """ Tilføj kolonner som denne strategi skal bruge.
 
