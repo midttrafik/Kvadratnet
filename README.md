@@ -99,6 +99,7 @@ I Webgis:
 ## Stop indenfor distance (analyse af serviceniveau)
 * OSM: Region Midtjylland
 * Opgavetype: Stop indenfor distance
+* Distancer: 400,500,600,800,1000,2000
 * Fjern Flextur: False
 * Fjern Plustur: True
 * Fjern 09 stander: False
@@ -124,13 +125,7 @@ I Webgis:
 ## Flextur på vejnettet
 * OSM: Jylland
 * Opgavetype: Flextur på vejnettet
-* Kvadratnet type data: FlexturData
-* Stop type data: FlexturData
-* Stop filnavn: det samme som kvadratnet filnavn
-* Fjern Flextur: ligegyldig
-* Fjern Plustur: ligegyldig
-* Fjern 09 stander: ligegyldig
-* Fjern nedlagte stop: ligegyldig
+* Filnavn: flextur_samlet_yyyy.csv
 
 I Webgis:
 * Anonymiser passagerer og rejser med "5 eller derunder" i f.eks. Python eller QGis.

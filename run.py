@@ -31,78 +31,80 @@ if __name__ == '__main__':
         task_strategy = Flextur()
     
     
-    print("-"*50)
-    print("Indtast information om kvadratnet.")
-    kvadratnet_type = click.prompt("Indlæsning af data", type=click.Choice(['Polygoner', 'Punkter', 'FlexturData']))
-    kvadratnet_filename = click.prompt("Navn på datafil uden sti til mappe", type=str)
-    
-    if kvadratnet_type == 'Polygoner':
-        kvadratnet_handler = Polygoner(
-            path=data_path,
-            filename=kvadratnet_filename,
-            crs=crs
-        )
-    elif kvadratnet_type == 'Punkter':
-        kvadratnet_handler = Punkter(
-            path=data_path,
-            filename=kvadratnet_filename,
-            crs=crs
-        )
-    elif kvadratnet_type == 'FlexturData':
+    if task_type == 'Flextur på vejnettet':
+        print("-"*50)
+        print("Indtast information om flextur.")
+        kvadratnet_filename = click.prompt("Navn på datafil uden sti til mappe", type=str)
+        
         kvadratnet_handler = FlexturData(
-            path=data_path,
-            filename=kvadratnet_filename,
-            crs=crs,
-            method='Input'
-        )
-    else:
-        raise Exception('Ugyldig metode til indlæsning af kvadratnet.')
-
-    
-    print("-"*50)
-    print("Indtast information om stop.")
-    stop_type = click.prompt("Indlæsning af stop", type=click.Choice(['MobilePlan', 'Shapefil', 'FlexturData']))
-    stop_filename = click.prompt("Navn på stopfil uden sti til mappe", type=str)
-    flex = click.prompt("Fjern Flextur", type=bool, default=False)
-    plus = click.prompt("Fjern Plustur", type=bool, default=True)
-    stander_9 = click.prompt("Fjern 09 stander", type=bool, default=False)
-    stander_nedlagt = click.prompt("Fjern nedlagte standere", type=bool, default=True)
-
-    if stop_type == 'MobilePlan':
-        stop_handler = MobilePlan(
-            path=data_path,
-            filename=stop_filename,
-            crs=crs,
-            flex=flex,
-            plus=plus,
-            stander_9=stander_9,
-            stander_nedlagt=stander_nedlagt
-        )
-    elif stop_type == 'Shapefil':
-        stop_code_col = click.prompt("Navn på kolonne som indeholder stopnummer", type=str)
-        stop_name_col = click.prompt("Navn på kolonne som indeholder stopnavn", type=str)
-        stop_geometry_col = click.prompt("Navn på kolonne som indeholder geometri", type=str)
-        stop_handler = StopShapefile(
-            path=data_path, 
-            filename=stop_filename, 
-            crs=crs, 
-            flex=flex, 
-            plus=plus, 
-            stander_9=stander_9, 
-            stander_nedlagt=stander_nedlagt, 
-            stop_code_col=stop_code_col, 
-            stop_name_col=stop_name_col, 
-            stop_geometry_col=stop_geometry_col
-        )
-    elif stop_type == 'FlexturData':
+                path=data_path,
+                filename=kvadratnet_filename,
+                crs=crs,
+                method='Input'
+            )
+        # for flextur skal stop indlæse samme data som kvadratnet
         stop_handler = FlexturData(
             path=data_path,
             filename=kvadratnet_filename,
             crs=crs,
             method='Stop'
         )
+        
     else:
-        raise Exception('Ugyldig metode til indlæsning af stop.')
+        print("-"*50)
+        print("Indtast information om kvadratnet.")
+        kvadratnet_type = click.prompt("Indlæsning af data", type=click.Choice(['Polygoner', 'Punkter', 'FlexturData']))
+        kvadratnet_filename = click.prompt("Navn på datafil uden sti til mappe", type=str)
+        
+        if kvadratnet_type == 'Polygoner':
+            kvadratnet_handler = Polygoner(
+                path=data_path,
+                filename=kvadratnet_filename,
+                crs=crs
+            )
+        elif kvadratnet_type == 'Punkter':
+            kvadratnet_handler = Punkter(
+                path=data_path,
+                filename=kvadratnet_filename,
+                crs=crs
+            )
+        
+        
+        print("-"*50)
+        print("Indtast information om stop.")
+        stop_type = click.prompt("Indlæsning af stop", type=click.Choice(['MobilePlan', 'Shapefil', 'FlexturData']))
+        stop_filename = click.prompt("Navn på stopfil uden sti til mappe", type=str)
+        flex = click.prompt("Fjern Flextur", type=bool, default=False)
+        plus = click.prompt("Fjern Plustur", type=bool, default=True)
+        stander_9 = click.prompt("Fjern 09 stander", type=bool, default=False)
+        stander_nedlagt = click.prompt("Fjern nedlagte standere", type=bool, default=True)
+
+        if stop_type == 'MobilePlan':
+            stop_handler = MobilePlan(
+                path=data_path,
+                filename=stop_filename,
+                crs=crs,
+                flex=flex,
+                plus=plus,
+                stander_9=stander_9,
+                stander_nedlagt=stander_nedlagt
+            )
+        elif stop_type == 'Shapefil':
+            stop_code_col = click.prompt("Navn på kolonne som indeholder stopnummer", type=str)
+            stop_name_col = click.prompt("Navn på kolonne som indeholder stopnavn", type=str)
+            stop_geometry_col = click.prompt("Navn på kolonne som indeholder geometri", type=str)
+            stop_handler = StopShapefile(
+                path=data_path, 
+                filename=stop_filename, 
+                crs=crs, 
+                flex=flex, 
+                plus=plus, 
+                stander_9=stander_9, 
+                stander_nedlagt=stander_nedlagt, 
+                stop_code_col=stop_code_col, 
+                stop_name_col=stop_name_col, 
+                stop_geometry_col=stop_geometry_col
+            )
     
     
     print("-"*50)
