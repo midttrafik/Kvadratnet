@@ -40,7 +40,7 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
 
 # Procedure
 * Første gang køres setup.py. Efterfølgende springes dette trin over.
-* Hent aktuelle stoppesteder med flextur knudepunkter ved brug af **SQL/aktuelle_stop.sql** gennem QGIS og download som shapefil.
+* Hent aktuelle stoppesteder med flextur knudepunkter ved brug af **scripts/aktuelle_stop.sql** gennem QGIS og download som shapefil.
 * Placer data i mappen **src/Data**.
     * Bemærk Multipoint geometri understøttes ikke. MultiPoint kam laves til Point med multipart til singlepart.
 * Åben og kør **run.py**.
@@ -127,9 +127,10 @@ I Webgis:
 * Opgavetype: Flextur på vejnettet
 * Filnavn: flextur_samlet_yyyy.csv
 
+* Anonymiser ved at køre **scripts/Flextur/anonymisering.ipynb**
+
 I Webgis:
-* Anonymiser passagerer og rejser med "5 eller derunder" i f.eks. Python eller QGis.
-* TODO
+* Tilføj anonymiseret tabel.
 
 
 ## Vigtigt
@@ -243,8 +244,8 @@ Havde løsningen været med OSMNX (Python) viste mine oprindelige eksperimenter 
 
 
 # Backlog
-* Tilføj togafgange til **SQL/Alle stop indenfor distance**
-* Tilføj vinkestrækninger til **SQL/aktuelle_stop.sql** og afgange på vinkestrækninger til **SQL/Alle stop indenfor distance**
-* Evt. til afgange over flere tidsrum morgen, eftermiddag, aften til **SQL/Alle stop indenfor distance**
+* Tilføj togafgange til **scripts/Alle stop indenfor distance**
+* Tilføj vinkestrækninger til **scripts/aktuelle_stop.sql** og afgange på vinkestrækninger til **scripts/Alle stop indenfor distance**
+* Evt. til afgange over flere tidsrum morgen, eftermiddag, aften til **scripts/Alle stop indenfor distance**
 * Skrivning af shapefil fra geopandas er langsom for store filer.
 

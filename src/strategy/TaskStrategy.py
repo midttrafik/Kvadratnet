@@ -282,6 +282,7 @@ class Flextur(TaskStrategy):
     
     def write_output(self, output, path, filename) -> None:
         output.to_file(path + filename, 
-                       driver='ESRI Shapefile')
+                       driver='ESRI Shapefile',
+                       encoding='utf-8')
 
     

@@ -61,7 +61,7 @@ class FlexturData(DataLoader):
             self.path + self.filename,
             delimiter=';',
             decimal=',',
-            encoding='Latin-1'
+            encoding='utf-8'
         )
         
         df.rename(
