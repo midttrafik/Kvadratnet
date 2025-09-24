@@ -3,3 +3,5 @@ __pycache__/
 /src/Data
 /src/Resultater
 Thumbs.db
+
+/scripts/Flextur/flextur_anonymisering.ipynb

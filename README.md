@@ -123,14 +123,16 @@ I Webgis:
 
 
 ## Flextur på vejnettet
-* OSM: Jylland
+* OSM: Jylland (Denmark - hvis nogle flexture er startet/sluttet udenfor Jylland)
 * Opgavetype: Flextur på vejnettet
 * Filnavn: flextur_samlet_yyyy.csv
 
 * Anonymiser ved at køre **scripts/Flextur/anonymisering.ipynb**
+* Dobbelttjek at annonymisering er udført korrekt, ellers tilret script.
 
 I Webgis:
-* Tilføj anonymiseret tabel.
+* Tilføj anonymiseret shapefil.
+* Kopier tidligere styling.
 
 
 ## Vigtigt
