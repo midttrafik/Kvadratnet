@@ -11,28 +11,10 @@ Eksempler på brug:
     * Korteste vej til nærmeste stop fra hver virksomhed.
 * Uddannelsesinstitutioner/Uddannelsesinstitutioner med elevtal.
     * Korteste vej til nærmeste stop fra hver uddannelsesinstitution.
+* Flextur
+    * Vis flextur på vejnettet i stedet for fugleflugtslinjer.
 
 Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres da programmet er opbygget med kompositionelt design.
-<br/>
-<br/>
-
-
-# Data strategier
-
-* Input strategi:
-    * Indlæs fil og transformer den således at den som minimum har følgende kolonner:
-        * id: unikt id.
-        * geometry_center: punkt geometri.
-    * F.eks. Befolkningskvadratnet, Arbejdspladser, Udannelsesinstitutioner mv.
-* Stop strategi:
-    * Indlæs fil og transformer den således at den som minimum har følgende kolonner:
-        * geometry: punkt geometri.
-        * stop_code: unikt id.
-        * stop_name: stop navn, værdier kan efterlades som None hvis ikke det er relevant.
-    * Filtyper:
-        * MobilePlan csv fil med kolonnerne: UTM32_Easting, UTM32_Northing, Long name, Kode til stoppunkt og Pos.nr.
-        * Shapefil med stopnummer, stopnavn og geometri. Kolonnenavne kan være vilkårlige så programmet spørger efter deres navne.
-* Dobbeltrettet OSM netværk af typen ”all” hentes automatisk. Inkluderer alle typer veje og stier indenfor det administrative område.
 
 <br/>
 <br/>
@@ -40,32 +22,33 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
 
 # Procedure
 * Første gang køres setup.py. Efterfølgende springes dette trin over.
-* Hent aktuelle stoppesteder med flextur knudepunkter ved brug af **scripts/aktuelle_stop.sql** gennem QGIS og download som shapefil.
-* Placer data i mappen **src/Data**.
+* Input data
+    * Placer filen i mappen [src/Data](src/Data/)
+    * Husk der skal være en id kolonne med navnet **id**
     * Bemærk Multipoint geometri understøttes ikke. MultiPoint kam laves til Point med multipart til singlepart.
-* Åben og kør **run.py**.
-* Indtast inputs. Valgmuligheder er (...) og default værdi er [...].
-    * Ethvert administrative OSM område kan anvendes.
-    * Vælg opgave, input data og stop data.
-    * Angiv filtre: 
-        * Flextur og 09 standere beholds som default.
-        * Plustur og nedlagte standere filtreres fra som default.
-    * Hvis stopfil er shapefil så angiv navne på kolonner som indeholder stopnummer, stopnavn og geometri.
-    * Stander chunk size er default 500, hvis der er problemer med *out of memory*, kan den sænkes mod at programmet bliver lidt langsomere.
-    * Mindste antal OSM knuder i uforbundende komponenter er default 200. Kan forøges hvis der er mange tilfælde hvor der ikke findes en vej. Et uforbundet komponent er en subgraf som ikke hænger sammen med hovedgrafen, f.eks. en ikke-brofast Ø eller en gangsti på taget af et museum.
-* Vent på at programmet er færdigt. Undgå andre CPU og memory krævende opgaver i mellemtiden.
-    * Det er OK hvis "RuntimeWarning: Couldn't reach some vertices." forekommer. Skyldes at den ene OSM knude er del af en uforbundet komponent så der ikke findes en sti til den anden OSM knude.
-    * Befolkningskvadratnet i Region Midtjylland tager ca. 120 minutter.
-        * Ca. 20 minutter for indlæsning af data.
-        * Ca. 30 minutter for Dijkstra's Algoritme.
-        * Ca. 45 miutter for at hente geometrien for korteste vej for hvert input.
-        * Cirka 30 minutter for at skrive shapefil.
-* Output ligger i **src/Resultater**.
-* Gå til Webgis afsnit.
+* Hent stoppesteder og flextursknudepunkter
+    * Åben QGIS og connect til PostgreSQL
+    * Kør SQL koden [scripts/aktuelle_stop.sql](scripts/aktuelle_stop.sql)
+    * Download Shapefil med koordinatsystem **EPSG:25832**
+    * Placer filen i mappen [src/Data](src/Data/)
+* Kør script
+    * Kør [run.py](run.py) i VSCode
+    * Indtast de korrekte input (se eksempler længere nede)
+        * OBS: (...) er valgmuligheder
+        * OBS: [...] er default værdier, her kan klikkes enter.
+        * OBS: chunk size er default 500, hvis der er problemer med *out of memory*, kan den sænkes mod at programmet bliver lidt langsomere.
+        * OBS: Mindste antal OSM knuder i uforbundende komponenter er default 200. Kan forøges hvis der er mange tilfælde hvor der ikke findes en vej. Et uforbundet komponent er en subgraf som ikke hænger sammen med hovedgrafen, f.eks. en ikke-brofast Ø eller en gangsti på taget af en bygning.
+    * Vent på beregningerne er færdige. Tager 2-4 timer afhængigt af opgavetype og datamængde.
+        * OBS: undgå andre CPU og memory krævende opgaver da det kan give out-of-memory fejl.
+        * OBS: Hvis "RuntimeWarning: Couldn't reach some vertices." logges konsollen er det ikke et problem. Det skyldes at en OSM knude er del af en uforbundet komponent hvor der ikke findes en sti til den anden OSM knude.
+    * Output ligger i [src/Resultater](src/Resultater/)
+* Upload og tilret i Webgis (se eksempler længere nede)
 
 <br/>
 
+
 ## Nærmeste stop
+Vigtige parametre:
 * OSM: Region Midtjylland
 * Opgavetype: Nærmeste stop
 * Fjern Flextur: True
@@ -73,10 +56,100 @@ Nye opgaver vedrørende afstande på vejnettet kan (relativt) nemt implementeres
 * Fjern 09 stander: False
 * Fjern nedlagte stop: True
 
-I Webgis:
-* Sørg for at original datakilde er i Webgis.
-* Lav eller opdater (tøm/tilføj) resultat tabel.
-* Refresh materialized views *_shortestpath* og *_shortestpath_line* eller lav nye hvis datakilde har ændret sig (kopier de gamle og ændre tabeller).
+<br/>
+
+### Eksempler
+1. Befolkningskvadratnet i Region Midtjylland.
+* Navn på administrativt OSM område: Region Midtjylland
+* CRS: EPSG:25832
+* Sti til data: src\Data\
+* Sti til resultater: src\Resultater\
+* Indtast information om opgaven
+    * Opgave type: Nærmeste stop
+* Indtast information om input
+    * Indlæsningstype: Polygoner
+    * Navn på inputfil: befolkning_region_midt_2025.shp
+* Indtast information om stop
+    * Indlæsningstype: Shapefil
+    * Navn på stopfil: MT_stop_og_flex_20250820.shp
+    * Fjern Flextur: True
+    * Fjern Plustur: True
+    * Fjern 09 stander: False
+    * Fjern nedlagte standere: True
+    * Navn på kolonne som indeholder stopnummer: stopnummer
+    * Navn på kolonne som indeholder stopnavn: stopnavn
+    * Navn på kolonne som indeholder geometri: geometry
+* Evt. ændre parametre
+    * Skriv resultat: True
+    * Chunk size: 500
+    * Mindste antal knuder i et uforbundet komponent: 200
+* Gå til Webgis 
+
+<br/>
+
+2. CVR i Region Midtjylland.
+* Navn på administrativt OSM område: Region Midtjylland
+* CRS: EPSG:25832
+* Sti til data: src\Data\
+* Sti til resultater: src\Resultater\
+* Indtast information om opgaven
+    * Opgave type: Nærmeste stop
+* Indtast information om input
+    * Indlæsningstype: Punkter
+    * Navn på inputfil: cvr_midtjylland.shp
+* Indtast information om stop
+    * Indlæsningstype: Shapefil
+    * Navn på stopfil: MT_stop_og_flex_20250820.shp
+    * Fjern Flextur: True
+    * Fjern Plustur: True
+    * Fjern 09 stander: False
+    * Fjern nedlagte standere: True
+    * Navn på kolonne som indeholder stopnummer: stopnummer
+    * Navn på kolonne som indeholder stopnavn: stopnavn
+    * Navn på kolonne som indeholder geometri: geometry
+* Evt. ændre parametre
+    * Skriv resultat: True
+    * Chunk size: 500
+    * Mindste antal knuder i et uforbundet komponent: 200
+* Gå til Webgis 
+
+<br/>
+
+3. Uddannelsesinstitutioner i Region Midthylland.
+* Navn på administrativt OSM område: Region Midtjylland
+* CRS: EPSG:25832
+* Sti til data: src\Data\
+* Sti til resultater: src\Resultater\
+* Indtast information om opgaven
+    * Opgave type: Nærmeste stop
+* Indtast information om input
+    * Indlæsningstype: Punkter
+    * Navn på inputfil: Uddannelsesinstitutioner_elevtal_2023_2024_25832.shp
+* Indtast information om stop
+    * Indlæsningstype: Shapefil
+    * Navn på stopfil: MT_stop_og_flex_20250820.shp
+    * Fjern Flextur: True
+    * Fjern Plustur: True
+    * Fjern 09 stander: False
+    * Fjern nedlagte standere: True
+    * Navn på kolonne som indeholder stopnummer: stopnummer
+    * Navn på kolonne som indeholder stopnavn: stopnavn
+    * Navn på kolonne som indeholder geometri: geometry
+* Evt. ændre parametre
+    * Skriv resultat: True
+    * Chunk size: 500
+    * Mindste antal knuder i et uforbundet komponent: 200
+* Gå til Webgis 
+
+<br/>
+
+### Webgis
+* Input fil med **id** skal være i Webgis
+* Upload resultat til tabel (enten ny eller tøm/tilføj)
+* Refresh eller lav nye materialized views **_shortestpath** og **_shortestpath_line**
+    * SQL kode findes i [scripts/Nærmeste stop](scripts/N%C3%A6rmeste%20stop/)
+    * Ændre tabelnavne
+* Kopier styling, metadata mv. fra tidligere views
 * Anvendt farveskala:
     - 0-250m, #FFF5F0
     - 250-500m, #FEE0D2
@@ -97,6 +170,7 @@ I Webgis:
 
 
 ## Stop indenfor distance (analyse af serviceniveau)
+Vigtige parametre:
 * OSM: Region Midtjylland
 * Opgavetype: Stop indenfor distance
 * Distancer: 400,500,600,800,1000,2000
@@ -105,10 +179,45 @@ I Webgis:
 * Fjern 09 stander: False
 * Fjern nedlagte stop: True
 
-I Webgis:
-* Sørg for at original datakilde er i Webgis.
-* Lav eller opdater (tøm/tilføj) resultat tabel.
-* Refresh materialized view *_allnearbystops* eller lav nyt hvis datakilde har ændret sig (kopier det gamle og ændre *K24* og tabelnavne).
+<br/>
+
+### Eksempler
+1. Befolkningskvadratnet i Region Midtjylland.
+* Navn på administrativt OSM område: Region Midtjylland
+* CRS: EPSG:25832
+* Sti til data: src\Data\
+* Sti til resultater: src\Resultater\
+* Indtast information om opgaven
+    * Opgave type: Stop indenfor distance
+    * Liste af distancer: 400,500,600,800,1000,2000
+* Indtast information om input
+    * Indlæsningstype: Polygoner
+    * Navn på inputfil: befolkning_region_midt_2025.shp
+* Indtast information om stop
+    * Indlæsningstype: Shapefil
+    * Navn på stopfil: MT_stop_og_flex_20250820.shp
+    * Fjern Flextur: False
+    * Fjern Plustur: True
+    * Fjern 09 stander: False
+    * Fjern nedlagte standere: True
+    * Navn på kolonne som indeholder stopnummer: stopnummer
+    * Navn på kolonne som indeholder stopnavn: stopnavn
+    * Navn på kolonne som indeholder geometri: geometry
+* Evt. ændre parametre
+    * Skriv resultat: True
+    * Chunk size: 500
+    * Mindste antal knuder i et uforbundet komponent: 200
+* Gå til Webgis 
+
+<br/>
+
+### Webgis
+* Input fil med **id** skal være i Webgis
+* Upload resultat til tabel (enten ny eller tøm/tilføj)
+* Lav nyt materialized view **_allnearbystops** 
+    * SQL kode findes i [scripts/Alle stop indenfor distance](scripts/Alle%20stop%20indenfor%20distance/)
+    * Ændre **K24** og tabelnavne
+* Kopier styling, metadata mv. fra tidligere views
 * Anvendt farveskala:
     * Meget høj, #FFE0E0 (afgange_døgn > 216 and antal_standertyper >= 2)
     * Høj, #E59B97 (afgange_døgn > 216 and antal_standertyper = 1)
@@ -123,22 +232,54 @@ I Webgis:
 
 
 ## Flextur på vejnettet
+Vigtige parametre:
 * OSM: Jylland (Denmark - hvis nogle flexture er startet/sluttet udenfor Jylland)
 * Opgavetype: Flextur på vejnettet
 * Filnavn: flextur_samlet_yyyy.csv
 
-* Anonymiser ved at køre **scripts/Flextur/anonymisering.ipynb**
-* Dobbelttjek at annonymisering er udført korrekt, ellers tilret script.
+<br/>
 
-I Webgis:
-* Tilføj anonymiseret shapefil.
-* Kopier tidligere styling.
+### Eksempler
+1. Vis flextur på vejnettet i stedet for fugleflugtslinjer.
+* Navn på administrativt OSM område: Region Midtjylland
+* CRS: EPSG:25832
+* Sti til data: src\Data\
+* Sti til resultater: src\Resultater\
+* Indtast information om opgaven
+    * Opgave type: Flextur på vejnettet
+* Indtast information om flextur.
+    * Navn på inputfil: flextur_samlet_2024.csv
+* Evt. ændre parametre
+    * Skriv resultat: True
+    * Chunk size: 500
+    * Mindste antal knuder i et uforbundet komponent: 200
+* Gå til Anonymisering
+
+<br/>
+
+### Anonymisering
+* Kør [scripts/Flextur/anonymisering.ipynb](scripts/Flextur/flextur_anonymisering.ipynb)
+* Dobbelttjek at annonymisering er udført korrekt, ellers tilret script.
+* Gå til Webgis
+
+<br/>
+
+### Webgis
+* Upload anonymiseret shapefil
+* Kopier styling, metadata mv. fra tidligere views
+
+![screenshot](Ressourcer/Flextur_vejnet.png)
+
+<br/>
 
 
 ## Vigtigt
 Alle beregningerne indeholder en usikkerhed da punkter og standere tildeles den nærmeste OSM knude på OSM grafen.<br/>
 Selvom Region Midtjylland har 400000 knuder, findes der ikke én knude som er præcist placeret ved punktet.<br/>
-I enkelte tilfælde betyder det at et kvadrat har en højere distance sammenlignet med nabokvadraterne, hvis den nærmeste OSM knude er langt væk.<br/>
+I enkelte tilfælde betyder det at et kvadrat har en højere distance sammenlignet med nabokvadraterne, hvis den nærmeste OSM knude er langt væk.
+
+<br/>
+
 ![screenshot](Ressourcer/Kvadratnet_usikkerhed.png)
 
 <br/>

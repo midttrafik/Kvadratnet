@@ -34,7 +34,7 @@ if __name__ == '__main__':
     if task_type == 'Flextur på vejnettet':
         print("-"*50)
         print("Indtast information om flextur.")
-        kvadratnet_filename = click.prompt("Navn på datafil uden sti til mappe", type=str)
+        kvadratnet_filename = click.prompt("Navn på inputfil", type=str)
         
         kvadratnet_handler = FlexturData(
                 path=data_path,
@@ -52,9 +52,9 @@ if __name__ == '__main__':
         
     else:
         print("-"*50)
-        print("Indtast information om kvadratnet.")
-        kvadratnet_type = click.prompt("Indlæsning af data", type=click.Choice(['Polygoner', 'Punkter', 'FlexturData']))
-        kvadratnet_filename = click.prompt("Navn på datafil uden sti til mappe", type=str)
+        print("Indtast information om input.")
+        kvadratnet_type = click.prompt("Indlæsningstype", type=click.Choice(['Polygoner', 'Punkter', 'FlexturData']))
+        kvadratnet_filename = click.prompt("Navn på inputfil", type=str)
         
         if kvadratnet_type == 'Polygoner':
             kvadratnet_handler = Polygoner(
@@ -72,8 +72,8 @@ if __name__ == '__main__':
         
         print("-"*50)
         print("Indtast information om stop.")
-        stop_type = click.prompt("Indlæsning af stop", type=click.Choice(['MobilePlan', 'Shapefil', 'FlexturData']))
-        stop_filename = click.prompt("Navn på stopfil uden sti til mappe", type=str)
+        stop_type = click.prompt("Indlæsningstype", type=click.Choice(['MobilePlan', 'Shapefil', 'FlexturData']))
+        stop_filename = click.prompt("Navn på stopfil", type=str)
         flex = click.prompt("Fjern Flextur", type=bool, default=False)
         plus = click.prompt("Fjern Plustur", type=bool, default=True)
         stander_9 = click.prompt("Fjern 09 stander", type=bool, default=False)
