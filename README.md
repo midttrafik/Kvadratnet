@@ -115,7 +115,7 @@ Vigtige parametre:
 
 <br/>
 
-3. Uddannelsesinstitutioner i Region Midthylland.
+3. Uddannelsesinstitutioner i Region Midtjylland.
 * Navn på administrativt OSM område: Region Midtjylland
 * CRS: EPSG:25832
 * Sti til data: src\Data\
